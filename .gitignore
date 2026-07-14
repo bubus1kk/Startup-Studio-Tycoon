@@ -1,0 +1,9 @@
+# Generated Rojo output
+build/
+sourcemap.json
+
+# Local logs and operating-system metadata
+*.log
+.DS_Store
+Thumbs.db
+
