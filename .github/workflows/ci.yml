@@ -19,7 +19,11 @@ jobs:
         shell: bash
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-        run: curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/3b803035635c29c752f6ea1d2befc1473b96c51a/scripts/install.sh | bash -s -- 1.2.0
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/3b803035635c29c752f6ea1d2befc1473b96c51a/scripts/install.sh | bash -s -- 1.2.0
+          export PATH="$HOME/.rokit/bin:$PATH"
+          echo "$HOME/.rokit/bin" >> "$GITHUB_PATH"
+          rokit --version
 
       - name: Install pinned tools
         run: rokit install --no-trust-check
