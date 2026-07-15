@@ -237,9 +237,11 @@ rojo build -o build/StartupStudioTycoon.rbxl
 stylua --check src tests
 selene src tests
 pwsh -NoProfile -File scripts/Test-Stage1.ps1
+pwsh -NoProfile -File scripts/Test-Stage2.ps1
+rojo build test.project.json -o build/StartupStudioTycoonStage2Tests.rbxl
 ```
 
-Затем `rojo serve`, подключение Studio и Play.
+Затем `rojo serve`, подключение Studio и Play. Runtime-тесты из `test.project.json` требуют отдельного ручного запуска Studio и не выполняются GitHub Actions на `ubuntu-latest`.
 
 ```powershell
 git add .

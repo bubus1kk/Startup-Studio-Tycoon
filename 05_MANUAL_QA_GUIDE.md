@@ -91,6 +91,20 @@ Screenshot, video, Output, Developer Console, profiler.
 
 ## 6. Обязательные сценарии
 
+### Architecture foundation
+
+- production Play: server/client bootstrap без ошибок;
+- Server & Clients: `PlayerScripts.Infrastructure` может появиться после запуска Bootstrap, но client ждёт его не более 10 секунд и затем успешно пишет `client_bootstrap_ready`;
+- при намеренно отсутствующем client dependency Output содержит `StartupError` и `StartupDependencyTimeout`, а test session не пишет финальный `PASS all`;
+- три перезапуска: одинаковый startup order;
+- `ReplicatedStorage.Remotes` существует и не содержит gameplay remotes;
+- `ServerConfig` и server registries отсутствуют в `ReplicatedStorage`;
+- test place: duplicate service, missing dependency и cycle отклоняются;
+- test place: Init/Start rollback и reverse cleanup проходят;
+- test place с клиентом: invalid remote payload не достигает handler;
+- test place: test-only remotes отсутствуют после cleanup;
+- production build не содержит `Stage2Tests`, `TestSupport` и test remotes.
+
 ### Plot
 
 - два игрока входят одновременно;

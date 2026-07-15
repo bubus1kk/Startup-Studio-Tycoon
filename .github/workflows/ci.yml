@@ -1,4 +1,4 @@
-name: Stage 1 CI
+name: Stage 1 and 2 CI
 
 on:
   push:
@@ -46,7 +46,14 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-Stage1.ps1
 
-      - name: Build Rojo project
+      - name: Run Stage 2 structural tests
+        shell: pwsh
+        run: ./scripts/Test-Stage2.ps1
+
+      - name: Build production Rojo project
         run: |
           mkdir -p build
           rojo build -o build/StartupStudioTycoon.rbxl
+
+      - name: Build Stage 2 test Rojo project
+        run: rojo build test.project.json -o build/StartupStudioTycoonStage2Tests.rbxl
