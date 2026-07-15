@@ -1,8 +1,10 @@
 --!strict
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local Workspace = game:GetService("Workspace")
 
 local AppTypes = require(ReplicatedStorage.Shared.Types.AppTypes)
 local ConfigLoader = require(ReplicatedStorage.Shared.Config.ConfigLoader)
@@ -10,7 +12,12 @@ local LifecycleRegistry = require(ReplicatedStorage.Shared.Infrastructure.Lifecy
 local Logger = require(ReplicatedStorage.Shared.Infrastructure.Logger)
 local PublicFeatureFlags = require(ReplicatedStorage.Shared.Config.PublicFeatureFlags)
 local RemoteDefinitions = require(ReplicatedStorage.Shared.Remotes.RemoteDefinitions)
+local PlotConfigValidator = require(ServerScriptService.Config.PlotConfigValidator)
 local RuntimeEnvironment = require(ServerScriptService.Infrastructure.RuntimeEnvironment)
+local PlayerSessionService = require(ServerScriptService.Services.PlayerSessionService)
+local PlotService = require(ServerScriptService.Services.PlotService)
+local OfficeShellBuilder = require(ServerScriptService.Systems.OfficeShellBuilder)
+local PlotDefinitions = require(ServerStorage.Config.PlotDefinitions)
 local ServerConfig = require(ServerStorage.Config.ServerConfig)
 local ServerConfigValidator = require(ServerScriptService.Config.ServerConfigValidator)
 local ServerRemoteRegistry = require(ServerScriptService.Infrastructure.ServerRemoteRegistry)
@@ -64,6 +71,16 @@ function ServerApplication.new(): Result<Application>
 		)
 	end
 
+	local plotConfigResult =
+		ConfigLoader.validateAndFreeze("PlotDefinitions", PlotDefinitions, PlotConfigValidator.validate)
+	if not plotConfigResult.ok then
+		return AppTypes.failure(
+			plotConfigResult.error.code,
+			plotConfigResult.error.message,
+			plotConfigResult.error.details
+		)
+	end
+
 	local serverConfig = serverConfigResult.value
 	local environment = RuntimeEnvironment.detect(serverConfig.environment)
 	local logger =
@@ -73,6 +90,8 @@ function ServerApplication.new(): Result<Application>
 	end)
 	local remoteRegistry =
 		ServerRemoteRegistry.new(ReplicatedStorage, RemoteDefinitions.folderName, RemoteDefinitions.definitions, logger)
+	local plotService = PlotService.new(Workspace, plotConfigResult.value, OfficeShellBuilder.new(nil), logger)
+	local playerSessionService = PlayerSessionService.new(Players, logger, environment ~= "Production")
 
 	local registrationResult = registry:Register({
 		name = "ServerRemoteRegistry",
@@ -95,6 +114,54 @@ function ServerApplication.new(): Result<Application>
 			registrationResult.error.code,
 			registrationResult.error.message,
 			registrationResult.error.details
+		)
+	end
+
+	local plotRegistrationResult = registry:Register({
+		name = "PlotService",
+		dependencies = {},
+		value = plotService,
+		hooks = {
+			Init = function(dependencies)
+				plotService:Init(dependencies)
+			end,
+			Start = function()
+				plotService:Start()
+			end,
+			Destroy = function()
+				plotService:Destroy()
+			end,
+		},
+	})
+	if not plotRegistrationResult.ok then
+		return AppTypes.failure(
+			plotRegistrationResult.error.code,
+			plotRegistrationResult.error.message,
+			plotRegistrationResult.error.details
+		)
+	end
+
+	local playerSessionRegistrationResult = registry:Register({
+		name = "PlayerSessionService",
+		dependencies = { "PlotService" },
+		value = playerSessionService,
+		hooks = {
+			Init = function(dependencies)
+				playerSessionService:Init(dependencies)
+			end,
+			Start = function()
+				playerSessionService:Start()
+			end,
+			Destroy = function()
+				playerSessionService:Destroy()
+			end,
+		},
+	})
+	if not playerSessionRegistrationResult.ok then
+		return AppTypes.failure(
+			playerSessionRegistrationResult.error.code,
+			playerSessionRegistrationResult.error.message,
+			playerSessionRegistrationResult.error.details
 		)
 	end
 

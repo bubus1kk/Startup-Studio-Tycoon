@@ -45,6 +45,8 @@
 
 **Задачи:** allocation; ownership; join/leave cleanup; deterministic generation; boundaries; spawn; server validation.
 
+**Зафиксированные параметры:** 6 игроков; 6 plots `plot_01` … `plot_06`; сетка 3 × 2; footprint 96 × 96; max height 64; center spacing 128; gap 32.
+
 **Gate:** три игрока получают разные plot; уход освобождает plot; чужой клиент не изменяет чужой офис.
 
 **Сложность:** высокая.
