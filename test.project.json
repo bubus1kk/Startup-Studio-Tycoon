@@ -1,0 +1,64 @@
+{
+  "name": "StartupStudioTycoonStage2Tests",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/ReplicatedStorage/Shared"
+      },
+      "TestSupport": {
+        "$path": "tests/fixtures"
+      }
+    },
+    "ServerScriptService": {
+      "Bootstrap": {
+        "$path": "src/ServerScriptService/Bootstrap"
+      },
+      "Config": {
+        "$path": "src/ServerScriptService/Config"
+      },
+      "Infrastructure": {
+        "$path": "src/ServerScriptService/Infrastructure"
+      },
+      "Stage2Tests": {
+        "$className": "Folder",
+        "TestHarness": {
+          "$path": "tests/TestHarness.lua"
+        },
+        "TestRunner": {
+          "$path": "tests/TestRunner.server.lua"
+        },
+        "Unit": {
+          "$path": "tests/unit"
+        },
+        "Integration": {
+          "$path": "tests/integration"
+        }
+      }
+    },
+    "ServerStorage": {
+      "Config": {
+        "$path": "src/ServerStorage/Config"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Bootstrap": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/Bootstrap"
+        },
+        "Infrastructure": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/Infrastructure"
+        },
+        "Stage2TestClient": {
+          "$path": "tests/TestClient.client.lua"
+        }
+      }
+    },
+    "StarterGui": {
+      "$path": "src/StarterGui"
+    },
+    "Workspace": {
+      "$path": "src/Workspace"
+    }
+  }
+}

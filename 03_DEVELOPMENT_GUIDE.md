@@ -97,6 +97,8 @@ export type Service = {
 
 `Init` связывает зависимости. `Start` подключает события. `Destroy` очищает connections, задачи и player-specific state.
 
+Stage 2 использует один generic lifecycle registry для server services и client controllers. Composition root адаптирует методы объекта в lifecycle hooks; алгоритмы dependency resolution, cycle detection и deterministic ordering не дублируются. При ошибке `Init` очищаются только успешно инициализированные объекты. При ошибке `Start` очищаются все инициализированные объекты. Cleanup всегда продолжается после отдельной ошибки, а `DestroyAll` идемпотентен.
+
 ## 6. Remotes
 
 - remotes создаются централизованно;
@@ -107,6 +109,8 @@ export type Service = {
 - частые remotes имеют rate limit;
 - RemoteFunction не используется для долгих операций;
 - чувствительные данные не находятся в ReplicatedStorage.
+
+Stage 2 разделяет remote infrastructure: shared содержит только definitions/types/validators, server registry создаёт Instances и bindings, client remote layer только получает server-created Instances. Test-only remotes отображаются исключительно `test.project.json`; production definitions до появления gameplay-контрактов пусты.
 
 Безопасный hire flow:
 
@@ -162,6 +166,8 @@ Startup validation:
 - положительные цены;
 - корректные диапазоны;
 - все ссылки существуют.
+
+После успешной проверки config копируется и рекурсивно замораживается через `table.freeze`. Публикация исходной mutable таблицы или только shallow freeze запрещены.
 
 ## 9. Save architecture
 

@@ -2,7 +2,7 @@
 
 Production-oriented Roblox simulation/tycoon project built with Rojo and strict Luau. Development is performed one accepted roadmap stage at a time.
 
-## Stage 1 toolchain
+## Toolchain
 
 The project pins its command-line tools in `rokit.toml`:
 
@@ -13,7 +13,7 @@ The project pins its command-line tools in `rokit.toml`:
 
 Wally is available through Rokit, but this stage has no package dependency. Therefore, no `wally.toml`, lockfile, or generated package tree is created yet. A manifest must be added together with the first justified dependency.
 
-## Bootstrap
+## Build and checks
 
 From PowerShell in the repository root:
 
@@ -22,31 +22,37 @@ rokit install
 stylua --check src tests
 selene src tests
 pwsh -NoProfile -File scripts/Test-Stage1.ps1
+pwsh -NoProfile -File scripts/Test-Stage2.ps1
 New-Item -ItemType Directory -Path build -Force | Out-Null
 rojo build -o build/StartupStudioTycoon.rbxl
+rojo build test.project.json -o build/StartupStudioTycoonStage2Tests.rbxl
 rojo serve
 ```
 
-Open the project in Roblox Studio, connect the installed Rojo 7.7.0 plugin to the local server, and run Play. The Output window should contain both messages:
+GitHub Actions does not run Roblox Studio. The Luau runtime specs in `test.project.json` require a manual Studio Play session with a client; a successful test-project build does not mean those runtime specs passed.
 
-```text
-[StartupStudioTycoon] Server bootstrap ready
-[StartupStudioTycoon] Client bootstrap ready
-```
+Open the production project in Roblox Studio, connect the installed Rojo 7.7.0 plugin, and run Play. Output should report `server_bootstrap_ready` and `client_bootstrap_ready` without errors. Production `ReplicatedStorage.Remotes` is intentionally empty during Stage 2.
 
-Stop `rojo serve` with `Ctrl+C` after the sync check. Roblox Studio MCP may be used for additional inspection, but it is not a Stage 1 blocker.
+The Stage 2 contracts are documented in [`docs/STAGE_2_ARCHITECTURE.md`](docs/STAGE_2_ARCHITECTURE.md).
+
+Stop `rojo serve` with `Ctrl+C` after the sync check. Roblox Studio MCP may be used for additional inspection, but the required Studio runtime checks still need explicit evidence.
 
 ## Source layout
 
 ```text
 src/
 ├─ ReplicatedStorage/
+│  └─ Shared/
 ├─ ServerScriptService/
-│  └─ Bootstrap/
+│  ├─ Bootstrap/
+│  ├─ Config/
+│  └─ Infrastructure/
 ├─ ServerStorage/
+│  └─ Config/
 ├─ StarterPlayer/
 │  └─ StarterPlayerScripts/
-│     └─ Bootstrap/
+│     ├─ Bootstrap/
+│     └─ Infrastructure/
 ├─ StarterGui/
 └─ Workspace/
 tests/
@@ -55,4 +61,4 @@ tests/
 └─ fixtures/
 ```
 
-Stage 1 intentionally contains no service registry, remotes, persistent state, economy, employees, office systems, tycoon UI, or monetization.
+Stage 2 contains architecture contracts only. It intentionally contains no gameplay remotes, persistent state, economy, employees, office systems, tycoon UI, or monetization.
