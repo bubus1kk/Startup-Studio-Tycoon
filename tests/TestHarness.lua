@@ -25,8 +25,10 @@ end
 
 function TestHarness.run(testCases: { TestCase })
 	local failures: { string } = {}
+
 	for _, testCase in testCases do
 		local ok, cause = xpcall(testCase.run, tracebackError)
+
 		if ok then
 			print(`[Stage3Test] PASS {testCase.name}`)
 		else
