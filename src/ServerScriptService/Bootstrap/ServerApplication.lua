@@ -1,8 +1,10 @@
 --!strict
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local Workspace = game:GetService("Workspace")
 
 local AppTypes = require(ReplicatedStorage.Shared.Types.AppTypes)
 local ConfigLoader = require(ReplicatedStorage.Shared.Config.ConfigLoader)
@@ -10,11 +12,18 @@ local LifecycleRegistry = require(ReplicatedStorage.Shared.Infrastructure.Lifecy
 local Logger = require(ReplicatedStorage.Shared.Infrastructure.Logger)
 local PublicFeatureFlags = require(ReplicatedStorage.Shared.Config.PublicFeatureFlags)
 local RemoteDefinitions = require(ReplicatedStorage.Shared.Remotes.RemoteDefinitions)
-local RuntimeEnvironment = require(ServerScriptService.Infrastructure.RuntimeEnvironment)
-local ServerConfig = require(ServerStorage.Config.ServerConfig)
+
+local PlotConfigValidator = require(ServerScriptService.Config.PlotConfigValidator)
 local ServerConfigValidator = require(ServerScriptService.Config.ServerConfigValidator)
+local RuntimeEnvironment = require(ServerScriptService.Infrastructure.RuntimeEnvironment)
 local ServerRemoteRegistry = require(ServerScriptService.Infrastructure.ServerRemoteRegistry)
 local ServiceRegistry = require(ServerScriptService.Infrastructure.ServiceRegistry)
+local PlayerSessionService = require(ServerScriptService.Services.PlayerSessionService)
+local PlotService = require(ServerScriptService.Services.PlotService)
+local OfficeShellBuilder = require(ServerScriptService.Systems.OfficeShellBuilder)
+
+local PlotDefinitions = require(ServerStorage.Config.PlotDefinitions)
+local ServerConfig = require(ServerStorage.Config.ServerConfig)
 
 type AppError = AppTypes.AppError
 type Result<T> = AppTypes.Result<T>
@@ -46,6 +55,7 @@ end
 function ServerApplication.new(): Result<Application>
 	local serverConfigResult =
 		ConfigLoader.validateAndFreeze("ServerConfig", ServerConfig, ServerConfigValidator.validate)
+
 	if not serverConfigResult.ok then
 		return AppTypes.failure(
 			serverConfigResult.error.code,
@@ -56,6 +66,7 @@ function ServerApplication.new(): Result<Application>
 
 	local publicFlagsResult =
 		ConfigLoader.validateAndFreeze("PublicFeatureFlags", PublicFeatureFlags.defaults(), PublicFeatureFlags.validate)
+
 	if not publicFlagsResult.ok then
 		return AppTypes.failure(
 			publicFlagsResult.error.code,
@@ -64,17 +75,35 @@ function ServerApplication.new(): Result<Application>
 		)
 	end
 
+	local plotConfigResult =
+		ConfigLoader.validateAndFreeze("PlotDefinitions", PlotDefinitions, PlotConfigValidator.validate)
+
+	if not plotConfigResult.ok then
+		return AppTypes.failure(
+			plotConfigResult.error.code,
+			plotConfigResult.error.message,
+			plotConfigResult.error.details
+		)
+	end
+
 	local serverConfig = serverConfigResult.value
 	local environment = RuntimeEnvironment.detect(serverConfig.environment)
+
 	local logger =
 		Logger.new(environment, game.JobId, "ServerApplication", serverConfig.featureFlags.enableServerDebugLogging)
+
 	local registry = ServiceRegistry.new(function(cleanupError: AppError)
 		logger:Error("lifecycle_cleanup_failed", errorMetadata(cleanupError))
 	end)
+
 	local remoteRegistry =
 		ServerRemoteRegistry.new(ReplicatedStorage, RemoteDefinitions.folderName, RemoteDefinitions.definitions, logger)
 
-	local registrationResult = registry:Register({
+	local plotService = PlotService.new(Workspace, plotConfigResult.value, OfficeShellBuilder.new(nil), logger)
+
+	local playerSessionService = PlayerSessionService.new(Players, logger, environment ~= "Production")
+
+	local remoteRegistryRegistrationResult = registry:Register({
 		name = "ServerRemoteRegistry",
 		dependencies = {},
 		value = remoteRegistry,
@@ -90,11 +119,62 @@ function ServerApplication.new(): Result<Application>
 			end,
 		},
 	})
-	if not registrationResult.ok then
+
+	if not remoteRegistryRegistrationResult.ok then
 		return AppTypes.failure(
-			registrationResult.error.code,
-			registrationResult.error.message,
-			registrationResult.error.details
+			remoteRegistryRegistrationResult.error.code,
+			remoteRegistryRegistrationResult.error.message,
+			remoteRegistryRegistrationResult.error.details
+		)
+	end
+
+	local plotRegistrationResult = registry:Register({
+		name = "PlotService",
+		dependencies = {},
+		value = plotService,
+		hooks = {
+			Init = function(dependencies)
+				plotService:Init(dependencies)
+			end,
+			Start = function()
+				plotService:Start()
+			end,
+			Destroy = function()
+				plotService:Destroy()
+			end,
+		},
+	})
+
+	if not plotRegistrationResult.ok then
+		return AppTypes.failure(
+			plotRegistrationResult.error.code,
+			plotRegistrationResult.error.message,
+			plotRegistrationResult.error.details
+		)
+	end
+
+	local playerSessionRegistrationResult = registry:Register({
+		name = "PlayerSessionService",
+		dependencies = { "PlotService" },
+		value = playerSessionService,
+		hooks = {
+			Init = function(dependencies)
+				playerSessionService:Init(dependencies)
+			end,
+			Start = function()
+				playerSessionService:Start()
+			end,
+			Destroy = function()
+				playerSessionService:Destroy()
+			end,
+		},
+	})
+
+	if not playerSessionRegistrationResult.ok then
+		return AppTypes.failure(
+			playerSessionRegistrationResult.error.code,
+			playerSessionRegistrationResult.error.message,
+			playerSessionRegistrationResult.error.details
 		)
 	end
 
@@ -109,6 +189,7 @@ end
 
 function ServerApplication.Start(self: Application): Result<true>
 	local orderResult = self._registry:ResolveStartupOrder()
+
 	if not orderResult.ok then
 		self._logger:Error("startup_order_failed", errorMetadata(orderResult.error))
 		return orderResult
@@ -119,24 +200,29 @@ function ServerApplication.Start(self: Application): Result<true>
 	})
 
 	local initResult = self._registry:InitAll()
+
 	if not initResult.ok then
 		self._logger:Error("application_init_failed", errorMetadata(initResult.error))
 		return initResult
 	end
 
 	local startResult = self._registry:StartAll()
+
 	if not startResult.ok then
 		self._logger:Error("application_start_failed", errorMetadata(startResult.error))
 		return startResult
 	end
 
 	self._logger:Info("server_bootstrap_ready", nil)
+
 	return AppTypes.success(true)
 end
 
 function ServerApplication.Destroy(self: Application): Result<true>
 	local destroyResult = self._registry:DestroyAll()
+
 	self._logger:Info("server_application_destroyed", nil)
+
 	return destroyResult
 end
 

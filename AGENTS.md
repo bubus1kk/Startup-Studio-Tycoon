@@ -64,11 +64,9 @@ stylua --check src tests
 selene src tests
 pwsh -NoProfile -File scripts/Test-Stage1.ps1
 pwsh -NoProfile -File scripts/Test-Stage2.ps1
+pwsh -NoProfile -File scripts/Test-Stage3.ps1
 rojo build -o build/StartupStudioTycoon.rbxl
-rojo build test.project.json -o build/StartupStudioTycoonStage2Tests.rbxl
-```
-
-The PowerShell commands above are structural suites. GitHub Actions does not execute Roblox Studio. Stage 2 Luau runtime specs require a manual Studio run of `test.project.json` until a separately approved CLI runner exists. If a command cannot run, report it.
+rojo build test.project.json -o build/StartupStudioTycoonStage3Tests.rbxl
 
 ## Stage rules
 

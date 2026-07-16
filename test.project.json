@@ -1,5 +1,5 @@
 {
-  "name": "StartupStudioTycoonStage2Tests",
+  "name": "StartupStudioTycoonStage3Tests",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
@@ -20,6 +20,15 @@
       "Infrastructure": {
         "$path": "src/ServerScriptService/Infrastructure"
       },
+      "Domain": {
+        "$path": "src/ServerScriptService/Domain"
+      },
+      "Services": {
+        "$path": "src/ServerScriptService/Services"
+      },
+      "Systems": {
+        "$path": "src/ServerScriptService/Systems"
+      },
       "Stage2Tests": {
         "$className": "Folder",
         "TestHarness": {
@@ -33,6 +42,12 @@
         },
         "Integration": {
           "$path": "tests/integration"
+        },
+        "ServerFixtures": {
+          "$path": "tests/serverFixtures"
+        },
+        "ForeignOwnershipProbe": {
+          "$path": "tests/ForeignOwnershipProbe.server.lua"
         }
       }
     },
@@ -51,6 +66,9 @@
         },
         "Stage2TestClient": {
           "$path": "tests/TestClient.client.lua"
+        },
+        "Stage3ForeignOwnershipProbe": {
+          "$path": "tests/ForeignOwnershipProbe.client.lua"
         }
       }
     },

@@ -107,11 +107,24 @@ Screenshot, video, Output, Developer Console, profiler.
 
 ### Plot
 
-- два игрока входят одновременно;
-- третий входит позже;
+- в production place запустить **Start Server + 3 Players**;
+- дождаться трёх `AssignedPlotId` и проверить `plot_01`, `plot_02`, `plot_03` без дублей;
+- все игроки имеют разные `AssignedPlotId`, `PlotId` и `OwnerUserId`;
+- каждый character находится перед входом именно своего plot, а не у общего/центрального spawn;
+- starter shell и низкая boundary frame одинаковы на всех plots;
+- spawn находится перед входом и смотрит в сторону офиса;
+- до reset в `Workspace.Map.Plots` ровно три runtime model;
+- выполнить **Reset Character** последовательно на каждом из трёх клиентов;
+- после каждого reset `AssignedPlotId` не меняется и character возвращается на `SpawnLocation` своего plot;
+- после всех reset в `Workspace.Map.Plots` по-прежнему ровно три runtime model, duplicate office отсутствует;
 - владелец выходит;
+- его runtime model и обе ownership-связи исчезают;
 - новый игрок получает свободный plot;
-- клиент пытается изменить чужой plot.
+- освобождённый plot создаётся заново без объектов прошлого владельца;
+- в test place owner вызывает `TestPlotMutation` для своего plot и получает success;
+- другой клиент вызывает `TestPlotMutation` для чужого plot и получает `PlotOwnershipMismatch` без изменения mutation count;
+- после failure/release/Destroy test/debug orphan validation проходит;
+- production place не содержит `Stage3TestRemotes` и `TestPlotMutation`.
 
 ### Building
 
