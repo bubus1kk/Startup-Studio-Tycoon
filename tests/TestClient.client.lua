@@ -64,6 +64,13 @@ end
 
 print("[Stage2Test] PASS production client emitted client_bootstrap_ready")
 
+local clientSpecs = playerScripts:WaitForChild("ClientSpecs", CLIENT_BOOTSTRAP_TIMEOUT_SECONDS)
+if clientSpecs == nil or not clientSpecs:IsA("Folder") then
+	error("Stage 4 client specs were not copied to PlayerScripts")
+end
+local buildMenuControllerClientSpec = require(clientSpecs.BuildMenuControllerClientSpec)
+buildMenuControllerClientSpec.run()
+
 local folder = ReplicatedStorage:WaitForChild("TestRemotes", 10)
 if folder == nil or not folder:IsA("Folder") then
 	error("Stage 2 test remote folder was not replicated")

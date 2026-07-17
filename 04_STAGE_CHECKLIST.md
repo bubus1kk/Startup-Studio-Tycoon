@@ -75,15 +75,35 @@
 
 ## Stage 4 — Building
 
-- [ ] room purchase;
-- [ ] prerequisites;
-- [ ] server price;
-- [ ] anchors;
-- [ ] duplicate request protection;
-- [ ] rejoin layout;
-- [ ] boundaries;
-- [ ] rollback on model failure;
-- [ ] generation performance checked.
+- [ ] `PlotRuntimeModel.PrimaryPart` остаётся стабильным `PlotAnchor`, а plot spawn/boundary ownership не меняется;
+- [ ] Garage создаётся только `OfficeBuildingService`, без двойных floor/walls;
+- [ ] покупка rooms, equipment, furniture, upgrades и tier transitions проходит через server-owned catalog;
+- [ ] initial Garage имеет цену 0 и сразу `Purchased`; остальные definitions имеют integer `price > 0`;
+- [ ] prerequisite graph, tier, ownership, duplicate и equipment slot проверяются сервером;
+- [ ] клиент не передаёт price, balance, plot/owner, prerequisite state, anchor или `CFrame`;
+- [ ] deterministic anchors и placement keys восстанавливают одинаковый layout;
+- [ ] `PlotBounds` и `OfficeGeometryValidator` проверяют bounds, overlaps, room envelopes, doorway, spawn и entrance path;
+- [ ] каждый tier содержит один local-space `EntranceApproach`, по которому игрок проходит от стабильного `SpawnLocation` до пола офиса без прыжка;
+- [ ] общий entrance geometry contract одновременно управляет physical approach и полным validation envelope без hardcoded path;
+- [ ] все 50 server-only templates содержат уникальную category-specific geometry, достижимы из catalog и не выходят за authoritative envelopes;
+- [ ] duplicate/concurrent request не создаёт второй item и не списывает Cash повторно;
+- [ ] failed generation/commit откатывает reservation, layout и pending root без orphan Instances;
+- [ ] tier/upgrade replacement оставляет ровно один canonical `OfficeBuildRoot`;
+- [ ] `OfficePurchaseResponse.state` использует только `Available | Purchased | Locked | MaxLevel | Pending`;
+- [ ] catalog pagination имеет page size 5, stable sorting и bounded payload;
+- [ ] persistent HUD Build button переживает respawn без duplicate UI/connections;
+- [ ] menu отключён до готовности office session, а закрытие UI не отменяет server transaction;
+- [ ] InvokeServer exception очищает pending и допускает retry; stale catalog response и callback после Destroy не меняют UI;
+- [ ] Development/Test/Production получают явно заданные provisional Stage 4 session funds 250000;
+- [ ] full catalog стоит 205150, достижим и оставляет Cash 44850;
+- [ ] destroy/rebuild и bounded same-server snapshot round-trip проходят без DataStore;
+- [ ] snapshot TTL/capacity используют injected monotonic clock и lazy eviction;
+- [ ] Solo и Start Server + 3 Players manual QA выполнены;
+- [ ] maximum-content generation и rebuild performance проверены в Studio profiler;
+- [ ] production/test remotes, probes и fixtures изолированы;
+- [ ] `scripts/Test-Stage1.ps1` … `scripts/Test-Stage4.ps1`, lint и оба Rojo build проходят.
+
+Stage 4 snapshot не является persistent cross-server save. DataStore/ProfileService/session locking/autosave остаются Stage 9; полноценная экономика остаётся Stage 8, polished UI framework — Stage 10.
 
 ## Stage 5 — Employees
 

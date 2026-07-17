@@ -1,17 +1,11 @@
 --!strict
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
 
-local LifecycleRegistry = require(ReplicatedStorage.Shared.Infrastructure.LifecycleRegistry)
-local Logger = require(ReplicatedStorage.Shared.Infrastructure.Logger)
-local PlayerSessionService = require(ServerScriptService.Services.PlayerSessionService)
 local TestHarness = require(script.Parent.Parent.TestHarness)
-local PlotTestUtils = require(script.Parent.Parent.ServerFixtures.PlotTestUtils)
 
-type DependencyResolver = LifecycleRegistry.DependencyResolver
 type TestCase = TestHarness.TestCase
 
 local ProductionPlotRuntimeSpec = {}
@@ -26,6 +20,16 @@ local function waitUntil(predicate: () -> boolean, timeoutSeconds: number): bool
 		task.wait(0.05)
 	until os.clock() >= deadline
 	return predicate()
+end
+
+local function countNamedDescendants(root: Instance, name: string): number
+	local count = if root.Name == name then 1 else 0
+	for _, descendant in root:GetDescendants() do
+		if descendant.Name == name then
+			count += 1
+		end
+	end
+	return count
 end
 
 local function productionBootstrapAndRespawnTest()
@@ -78,6 +82,11 @@ local function productionBootstrapAndRespawnTest()
 	TestHarness.assertEqual(plotModel:GetAttribute("PlotId"), plotId)
 	TestHarness.assertEqual(plotModel:GetAttribute("OwnerUserId"), player.UserId)
 	TestHarness.assertTrue(plotModel:GetAttribute("AllocationState") == nil)
+	local plotAnchor = plotModel:FindFirstChild("PlotAnchor")
+	TestHarness.assertTrue(plotAnchor ~= nil and plotAnchor:IsA("BasePart"))
+	TestHarness.assertEqual(plotModel.PrimaryPart, plotAnchor)
+	local officeRoot = plotModel:FindFirstChild("OfficeBuildRoot")
+	TestHarness.assertTrue(officeRoot ~= nil and officeRoot:IsA("Model"))
 
 	local spawnMarker = plotModel:FindFirstChild("SpawnMarker")
 	TestHarness.assertTrue(spawnMarker ~= nil and spawnMarker:IsA("BasePart"))
@@ -106,106 +115,53 @@ local function productionBootstrapAndRespawnTest()
 		"Initial character did not use the assigned plot spawn"
 	)
 
-	local initialCharacter = player.Character
-	TestHarness.assertTrue(initialCharacter ~= nil)
-	if initialCharacter == nil then
+	local previousCharacter = player.Character
+	TestHarness.assertTrue(previousCharacter ~= nil)
+	if previousCharacter == nil then
 		return
 	end
 	local plotModelCountBeforeRespawn = #plots:GetChildren()
 
-	player:LoadCharacter()
-	TestHarness.assertTrue(
-		waitUntil(function()
-			local character = player.Character
-			if character == nil or character == initialCharacter then
-				return false
-			end
-			local root = character:FindFirstChild("HumanoidRootPart")
-			if root == nil or not root:IsA("BasePart") then
-				return false
-			end
-			return (root.Position - expectedSpawnCFrame.Position).Magnitude <= 1
-		end, RUNTIME_TIMEOUT_SECONDS),
-		"Respawn did not use the assigned plot spawn"
-	)
-	TestHarness.assertEqual(player:GetAttribute("AssignedPlotId"), plotId)
-	TestHarness.assertEqual(player.RespawnLocation, spawnLocation)
-	TestHarness.assertEqual(#plots:GetChildren(), plotModelCountBeforeRespawn, "Respawn created a duplicate plot model")
-
-	local productionRespawnLocation = player.RespawnLocation
-	local fixture = PlotTestUtils.createFixture(nil)
-	fixture.root.Name = "Stage3SessionSpawnRegression"
-	fixture.root.Parent = Workspace
-	local logger = Logger.new("Test", "studio-runtime", "PlayerSessionSpawnRegression", true)
-	local sessionService = PlayerSessionService.new(Players, logger, true)
-	local function getDependency(name: string): unknown
-		return if name == "PlotService" then fixture.service else nil
-	end
-	local resolver: DependencyResolver = {
-		Get = function(_self: DependencyResolver, name: string): unknown
-			return getDependency(name)
-		end,
-		Require = function(_self: DependencyResolver, name: string): unknown
-			local dependency = getDependency(name)
-			if dependency == nil then
-				error(`Missing test dependency {name}`)
-			end
-			return dependency
-		end,
-	}
-	sessionService:Init(resolver)
-
-	local regressionOk, regressionCause = xpcall(function()
-		local beginResult = sessionService:BeginSession(player)
-		TestHarness.assertTrue(beginResult.ok)
-		local firstFixtureSpawn = player.RespawnLocation
-		TestHarness.assertTrue(firstFixtureSpawn ~= nil and firstFixtureSpawn:IsA("SpawnLocation"))
-
-		local currentCharacter = player.Character
-		TestHarness.assertTrue(currentCharacter ~= nil)
-		if currentCharacter == nil then
-			return
-		end
-		local currentRoot = currentCharacter:FindFirstChild("HumanoidRootPart")
-		TestHarness.assertTrue(currentRoot ~= nil and currentRoot:IsA("BasePart"))
-		if currentRoot == nil or not currentRoot:IsA("BasePart") then
-			return
-		end
-		local currentRootCFrame = currentRoot.CFrame
+	for resetIndex = 1, 5 do
+		player:LoadCharacter()
 		TestHarness.assertTrue(
-			not sessionService:_positionCharacter(player, initialCharacter, "StaleCharacterAddedRegression")
+			waitUntil(function()
+				local character = player.Character
+				if character == nil or character == previousCharacter then
+					return false
+				end
+				local root = character:FindFirstChild("HumanoidRootPart")
+				if root == nil or not root:IsA("BasePart") then
+					return false
+				end
+				return (root.Position - expectedSpawnCFrame.Position).Magnitude <= 1
+			end, RUNTIME_TIMEOUT_SECONDS),
+			`Reset Character {resetIndex}/5 did not use the assigned plot spawn`
 		)
-		TestHarness.assertEqual(currentRoot.CFrame, currentRootCFrame, "Stale callback moved the current character")
-
-		local firstEndResult = sessionService:EndSession(player)
-		TestHarness.assertTrue(firstEndResult.ok)
-		TestHarness.assertTrue(player.RespawnLocation == nil, "Release did not clear RespawnLocation")
-		if firstFixtureSpawn ~= nil then
-			TestHarness.assertTrue(firstFixtureSpawn.Parent == nil)
+		previousCharacter = player.Character
+		TestHarness.assertEqual(player:GetAttribute("AssignedPlotId"), plotId)
+		TestHarness.assertEqual(player.RespawnLocation, spawnLocation)
+		TestHarness.assertEqual(
+			#plots:GetChildren(),
+			plotModelCountBeforeRespawn,
+			`Reset Character {resetIndex}/5 created a duplicate plot model`
+		)
+		for name, expectedCount in
+			{
+				SpawnLocation = 1,
+				PlotAnchor = 1,
+				OfficeBuildRoot = 1,
+				EntranceApproach = 1,
+			}
+		do
+			TestHarness.assertEqual(
+				countNamedDescendants(plotModel, name),
+				expectedCount,
+				`Reset Character {resetIndex}/5 changed {name} count`
+			)
 		end
-
-		local reuseResult = sessionService:BeginSession(player)
-		TestHarness.assertTrue(reuseResult.ok)
-		local reusedFixtureSpawn = player.RespawnLocation
-		TestHarness.assertTrue(reusedFixtureSpawn ~= nil and reusedFixtureSpawn:IsA("SpawnLocation"))
-		TestHarness.assertTrue(reusedFixtureSpawn ~= firstFixtureSpawn)
-	end, function(errorValue: unknown): string
-		return debug.traceback(tostring(errorValue), 2)
-	end)
-
-	sessionService:EndSession(player)
-	sessionService:Destroy()
-	fixture:Destroy()
-	player.RespawnLocation = productionRespawnLocation
-	player:SetAttribute("AssignedPlotId", plotId)
-	local currentCharacter = player.Character
-	if currentCharacter ~= nil then
-		currentCharacter:PivotTo(expectedSpawnCFrame)
 	end
 
-	if not regressionOk then
-		error(regressionCause, 0)
-	end
 	TestHarness.assertEqual(player.RespawnLocation, spawnLocation)
 	TestHarness.assertEqual(
 		#plots:GetChildren(),

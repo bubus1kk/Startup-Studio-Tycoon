@@ -65,7 +65,7 @@ $requiredPaths = @(
 	"src/ServerScriptService/Domain/PlotTypes.lua",
 	"src/ServerScriptService/Domain/PlotBounds.lua",
 	"src/ServerScriptService/Config/PlotConfigValidator.lua",
-	"src/ServerScriptService/Systems/OfficeShellBuilder.lua",
+	"src/ServerScriptService/Systems/PlotRuntimeBuilder.lua",
 	"src/ServerScriptService/Services/PlotService.lua",
 	"src/ServerScriptService/Services/PlayerSessionService.lua",
 	"src/ServerStorage/Config/PlotDefinitions.lua",
@@ -89,6 +89,7 @@ $testProjectText = Read-ProjectFile "test.project.json"
 $testProject = $testProjectText | ConvertFrom-Json
 
 Assert-Stage3 -Condition (-not $productionProjectText.Contains("tests/")) -Message "Production project must not map tests"
+Assert-Stage3 -Condition (-not (Test-Path -LiteralPath (Join-Path $projectRoot "src/ServerScriptService/Systems/OfficeShellBuilder.lua"))) -Message "Retired OfficeShellBuilder must remain absent"
 Assert-Stage3 -Condition ($productionProject.tree.Workspace.'$path' -eq "src/Workspace") -Message "Accepted production Workspace mapping changed"
 Assert-Stage3 -Condition ($testProject.tree.ServerScriptService.Domain.'$path' -eq "src/ServerScriptService/Domain") -Message "Test project does not map server plot domain"
 Assert-Stage3 -Condition ($testProject.tree.ServerScriptService.Services.'$path' -eq "src/ServerScriptService/Services") -Message "Test project does not map Stage 3 services"
@@ -108,7 +109,8 @@ for ($plotIndex = 1; $plotIndex -le 6; $plotIndex += 1) {
 }
 
 $remoteDefinitions = Read-ProjectFile "src/ReplicatedStorage/Shared/Remotes/RemoteDefinitions.lua"
-Assert-Stage3 -Condition ($remoteDefinitions.Contains("local definitions: { RemoteDefinition } = {}")) -Message "Stage 3 must not add production remotes"
+Assert-Stage3 -Condition ($remoteDefinitions.Contains('name = "RequestOfficeCatalog"')) -Message "Approved Stage 4 catalog remote is missing"
+Assert-Stage3 -Condition ($remoteDefinitions.Contains('name = "RequestOfficePurchase"')) -Message "Approved Stage 4 purchase remote is missing"
 Assert-Stage3 -Condition (-not $remoteDefinitions.Contains("TestPlotMutation")) -Message "Test-only plot remote leaked into production definitions"
 
 $replicatedPlotModules = Get-ChildItem -Path (Join-Path $projectRoot "src/ReplicatedStorage") -Recurse -File | Where-Object {
@@ -118,13 +120,14 @@ Assert-Stage3 -Condition ($replicatedPlotModules.Count -eq 0) -Message "Stage 3 
 
 $plotService = Read-ProjectFile "src/ServerScriptService/Services/PlotService.lua"
 $playerSessionService = Read-ProjectFile "src/ServerScriptService/Services/PlayerSessionService.lua"
-$officeShellBuilder = Read-ProjectFile "src/ServerScriptService/Systems/OfficeShellBuilder.lua"
+$plotRuntimeBuilder = Read-ProjectFile "src/ServerScriptService/Systems/PlotRuntimeBuilder.lua"
+$officeLayoutBuilder = Read-ProjectFile "src/ServerScriptService/Systems/OfficeLayoutBuilder.lua"
 $serverApplication = Read-ProjectFile "src/ServerScriptService/Bootstrap/ServerApplication.lua"
 Assert-Stage3 -Condition ($plotService.Contains('ensureFolder(self._workspaceRoot, "Map")')) -Message "PlotService.Init must own canonical Map creation"
 Assert-Stage3 -Condition ($plotService.Contains('ensureFolder(mapFolder, "Plots")')) -Message "PlotService.Init must own canonical Plots creation"
 Assert-Stage3 -Condition ($serverApplication.Contains('name = "PlotService"')) -Message "PlotService is not registered through ServiceRegistry"
 Assert-Stage3 -Condition ($serverApplication.Contains('name = "PlayerSessionService"')) -Message "PlayerSessionService is not registered through ServiceRegistry"
-Assert-Stage3 -Condition ($serverApplication.Contains('dependencies = { "PlotService" }')) -Message "PlayerSessionService lacks its explicit PlotService dependency"
+Assert-Stage3 -Condition ($serverApplication.Contains('"PlotService", "SessionCurrencyService", "OfficeBuildingService"')) -Message "PlayerSessionService lacks its explicit Stage 3/4 dependencies"
 Assert-Stage3 -Condition ($playerSessionService.Contains("Players.PlayerAdded") -or $playerSessionService.Contains("self._players.PlayerAdded")) -Message "PlayerAdded lifecycle binding is missing"
 Assert-Stage3 -Condition ($playerSessionService.Contains("Players.PlayerRemoving") -or $playerSessionService.Contains("self._players.PlayerRemoving")) -Message "PlayerRemoving lifecycle binding is missing"
 Assert-Stage3 -Condition ($playerSessionService.Contains("CharacterAdded:Connect")) -Message "CharacterAdded lifecycle binding is missing"
@@ -134,14 +137,22 @@ Assert-Stage3 -Condition ($playerSessionService.Contains("player.RespawnLocation
 Assert-Stage3 -Condition ($playerSessionService.Contains("player.RespawnLocation = nil")) -Message "RespawnLocation cleanup is missing"
 Assert-Stage3 -Condition ($playerSessionService.Contains("spawnContext.generationToken ~= session.generationToken")) -Message "Spawn callback generation-token validation is missing"
 Assert-Stage3 -Condition (-not $playerSessionService.Contains("LoadCharacter")) -Message "Production session service must retain automatic character spawning"
-Assert-Stage3 -Condition ($officeShellBuilder.Contains('Instance.new("SpawnLocation")')) -Message "Physical plot spawn must be a SpawnLocation"
-Assert-Stage3 -Condition (-not $officeShellBuilder.Contains('"SpawnPlatform"')) -Message "Legacy non-spawn Part must not remain canonical"
+Assert-Stage3 -Condition ($plotRuntimeBuilder.Contains('Instance.new("SpawnLocation")')) -Message "Physical plot spawn must be a SpawnLocation"
+Assert-Stage3 -Condition ($plotRuntimeBuilder.Contains('"PlotAnchor"')) -Message "Stable PlotAnchor is missing"
+Assert-Stage3 -Condition ($plotRuntimeBuilder.Contains('"PlotBoundary"')) -Message "PlotBoundary is missing"
+Assert-Stage3 -Condition ($plotRuntimeBuilder.Contains('"SpawnMarker"')) -Message "SpawnMarker is missing"
+Assert-Stage3 -Condition ($plotRuntimeBuilder.Contains("plotModel.PrimaryPart = anchor")) -Message "PlotRuntimeModel PrimaryPart must be PlotAnchor"
+Assert-Stage3 -Condition (([regex]::Matches($plotRuntimeBuilder, 'Instance.new\("SpawnLocation"\)')).Count -eq 1) -Message "Plot runtime builder must create exactly one spawn"
+Assert-Stage3 -Condition (([regex]::Matches($plotRuntimeBuilder, '"PlotAnchor"')).Count -eq 1) -Message "Plot runtime builder must create exactly one PlotAnchor"
+Assert-Stage3 -Condition (-not $plotRuntimeBuilder.Contains('"SpawnPlatform"')) -Message "Legacy non-spawn Part must not remain canonical"
+Assert-Stage3 -Condition (-not $officeLayoutBuilder.Contains('Instance.new("SpawnLocation")')) -Message "Stage 4 office builder must not create a second spawn"
+Assert-Stage3 -Condition (-not $officeLayoutBuilder.Contains('"PlotAnchor"')) -Message "Stage 4 office builder must not create or replace PlotAnchor"
 
 $stage3ProductionFiles = @(
 	"src/ServerScriptService/Domain/PlotTypes.lua",
 	"src/ServerScriptService/Domain/PlotBounds.lua",
 	"src/ServerScriptService/Config/PlotConfigValidator.lua",
-	"src/ServerScriptService/Systems/OfficeShellBuilder.lua",
+	"src/ServerScriptService/Systems/PlotRuntimeBuilder.lua",
 	"src/ServerScriptService/Services/PlotService.lua",
 	"src/ServerScriptService/Services/PlayerSessionService.lua",
 	"src/ServerStorage/Config/PlotDefinitions.lua"
@@ -172,7 +183,7 @@ try {
 	$null = Assert-SourcemapPath -Root $productionSourcemap -Segments @("ServerScriptService", "Domain", "PlotBounds") -Description "Production PlotBounds"
 	$null = Assert-SourcemapPath -Root $productionSourcemap -Segments @("ServerScriptService", "Services", "PlotService") -Description "Production PlotService"
 	$null = Assert-SourcemapPath -Root $productionSourcemap -Segments @("ServerScriptService", "Services", "PlayerSessionService") -Description "Production PlayerSessionService"
-	$null = Assert-SourcemapPath -Root $productionSourcemap -Segments @("ServerScriptService", "Systems", "OfficeShellBuilder") -Description "Production OfficeShellBuilder"
+	$null = Assert-SourcemapPath -Root $productionSourcemap -Segments @("ServerScriptService", "Systems", "PlotRuntimeBuilder") -Description "Production PlotRuntimeBuilder"
 	$null = Assert-SourcemapPath -Root $productionSourcemap -Segments @("ServerStorage", "Config", "PlotDefinitions") -Description "Production PlotDefinitions"
 	Assert-Stage3 -Condition ($productionSourcemapPath -ne $testSourcemapPath) -Message "Production and test sourcemaps must be separate"
 	Assert-Stage3 -Condition (-not (Get-Content -Raw -LiteralPath $productionSourcemapPath).Contains("TestPlotRemoteDefinitions")) -Message "Test-only plot remote definition leaked into production sourcemap"

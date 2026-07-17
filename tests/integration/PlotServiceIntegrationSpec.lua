@@ -2,7 +2,7 @@
 
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local OfficeShellBuilder = require(ServerScriptService.Systems.OfficeShellBuilder)
+local PlotRuntimeBuilder = require(ServerScriptService.Systems.PlotRuntimeBuilder)
 local TestHarness = require(script.Parent.Parent.TestHarness)
 local PlotTestUtils = require(script.Parent.Parent.ServerFixtures.PlotTestUtils)
 
@@ -150,7 +150,7 @@ end
 
 local function deterministicOfficeGeometryTest()
 	local definition = PlotTestUtils.validatedConfig().definitions[1]
-	local builder = OfficeShellBuilder.new(nil)
+	local builder = PlotRuntimeBuilder.new(nil)
 	local firstResult = builder:Build(definition)
 	local secondResult = builder:Build(definition)
 	TestHarness.assertTrue(firstResult.ok and secondResult.ok)
@@ -165,7 +165,7 @@ local function deterministicOfficeGeometryTest()
 		partCount += 1
 		TestHarness.assertEqual(secondGeometry[path], geometry)
 	end
-	TestHarness.assertEqual(partCount, 12)
+	TestHarness.assertEqual(partCount, 7)
 	for path in secondGeometry do
 		TestHarness.assertTrue(firstGeometry[path] ~= nil)
 	end
@@ -173,6 +173,9 @@ local function deterministicOfficeGeometryTest()
 	local secondSpawn = secondResult.value:FindFirstChild("SpawnLocation")
 	TestHarness.assertTrue(firstSpawn ~= nil and firstSpawn:IsA("SpawnLocation"))
 	TestHarness.assertTrue(secondSpawn ~= nil and secondSpawn:IsA("SpawnLocation"))
+	local firstAnchor = firstResult.value:FindFirstChild("PlotAnchor")
+	TestHarness.assertTrue(firstAnchor ~= nil and firstResult.value.PrimaryPart == firstAnchor)
+	TestHarness.assertTrue(firstResult.value:FindFirstChild("OfficeBuildRoot") == nil)
 	firstResult.value:Destroy()
 	secondResult.value:Destroy()
 end
@@ -211,7 +214,7 @@ function PlotServiceIntegrationSpec.tests(): { TestCase }
 			name = "three allocations have distinct spawn transforms and reuse creates a new binding",
 			run = spawnContextsAreDistinctAndReboundOnReuseTest,
 		},
-		{ name = "starter office geometry is deterministic", run = deterministicOfficeGeometryTest },
+		{ name = "plot runtime geometry and stable anchor are deterministic", run = deterministicOfficeGeometryTest },
 		{ name = "builder failure rolls back without orphaned models", run = builderFailureRollsBackWithoutOrphanTest },
 	}
 end
