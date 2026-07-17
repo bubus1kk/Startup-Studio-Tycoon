@@ -10,6 +10,7 @@
         "CanTouch": false,
         "CanQuery": false,
         "Transparency": 1,
+<<<<<<< HEAD
         "Size": [
           1,
           1,
@@ -54,12 +55,20 @@
     },
     {
       "name": "LedgerDisplay",
+=======
+        "Size": [1, 1, 1]
+      }
+    },
+    {
+      "name": "ExecutiveWorkSurface",
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
       "className": "Part",
       "properties": {
         "Anchored": true,
         "CanCollide": false,
         "CanTouch": false,
         "CanQuery": true,
+<<<<<<< HEAD
         "Material": "Neon",
         "Color": [
           0.84,
@@ -155,6 +164,10 @@
           0,
           1
         ]
+=======
+        "Transparency": 0.15,
+        "Size": [1.2, 0.4, 0.60]
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
       }
     }
   ]

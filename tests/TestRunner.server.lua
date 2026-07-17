@@ -3,6 +3,7 @@
 local TestHarness = require(script.Parent.TestHarness)
 
 local StudioTestService = game:GetService("StudioTestService")
+<<<<<<< HEAD
 local testArgs = StudioTestService:GetTestArgs()
 
 -- The acceptance router owns structured Stage 4 suite runs. Preserve the
@@ -44,6 +45,8 @@ if testArgs == "Stage4RuntimeGate" then
 		})
 	end)
 end
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 
 local ClientDependencyResolverSpec = require(script.Parent.Unit.ClientDependencyResolverSpec)
 local ConfigAndPayloadSpec = require(script.Parent.Unit.ConfigAndPayloadSpec)
@@ -57,10 +60,15 @@ local OfficeLayoutSerializerSpec = require(script.Parent.Unit.OfficeLayoutSerial
 local OfficePlacementSpec = require(script.Parent.Unit.OfficePlacementSpec)
 local OfficeProgressionSpec = require(script.Parent.Unit.OfficeProgressionSpec)
 local OfficeSnapshotCacheSpec = require(script.Parent.Unit.OfficeSnapshotCacheSpec)
+<<<<<<< HEAD
 local OfficeTemplateContentSpec = require(script.Parent.Unit.OfficeTemplateContentSpec)
 local RequestRateLimiterSpec = require(script.Parent.Unit.RequestRateLimiterSpec)
 local SessionCurrencyServiceSpec = require(script.Parent.Unit.SessionCurrencyServiceSpec)
 local AcceptanceRunnerSpec = require(script.Parent.Parent.Stage4Acceptance.PluginRunnerUnderTest.AcceptanceRunnerSpec)
+=======
+local RequestRateLimiterSpec = require(script.Parent.Unit.RequestRateLimiterSpec)
+local SessionCurrencyServiceSpec = require(script.Parent.Unit.SessionCurrencyServiceSpec)
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 
 local PlotServiceIntegrationSpec = require(script.Parent.Integration.PlotServiceIntegrationSpec)
 local ProductionPlotRuntimeSpec = require(script.Parent.Integration.ProductionPlotRuntimeSpec)
@@ -115,7 +123,10 @@ for _, spec in
 		OfficeSnapshotCacheSpec,
 		RequestRateLimiterSpec,
 		OfficeGeometryValidatorSpec,
+<<<<<<< HEAD
 		OfficeTemplateContentSpec,
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	}
 do
 	for _, testCase in spec.tests() do
@@ -156,16 +167,22 @@ do
 	end
 end
 
+<<<<<<< HEAD
 local report: TestHarness.Report? = nil
 local ok, cause = xpcall(function()
 	report = TestHarness.runAndCollect(testCases)
 	if (report :: TestHarness.Report).failed > 0 then
 		error(`Stage 4 runtime tests failed ({(report :: TestHarness.Report).failed})`)
 	end
+=======
+local ok, cause = xpcall(function()
+	TestHarness.run(testCases)
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 end, function(errorValue: unknown): string
 	return debug.traceback(tostring(errorValue), 2)
 end)
 
+<<<<<<< HEAD
 if testArgs == "Stage4RuntimeGate" then
 	if runtimeWatchdog ~= nil then
 		pcall(task.cancel, runtimeWatchdog)
@@ -199,6 +216,12 @@ if testArgs == "Stage4RuntimeGate" then
 		metrics = {
 			runtimeTestsExecuted = finalReport.total,
 		},
+=======
+if StudioTestService:GetTestArgs() == "Stage4RuntimeGate" then
+	StudioTestService:EndTest({
+		ok = ok,
+		cause = if ok then "none" else cause,
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	})
 end
 

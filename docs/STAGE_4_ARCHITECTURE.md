@@ -179,9 +179,15 @@ The theoretical largest valid response is bounded at 109 validator nodes and dep
 
 Every tier provides a complete deterministic `roomAnchors` map. Room, equipment and furniture placement is reconstructed as `plotOrigin * tierAnchor * serverSlotOffset * envelopeOffset`; world-space client transforms never enter state. Tier shell parts use `plotOrigin * CFrame.new(localOffset)` so rotated plots retain orientation.
 
+<<<<<<< HEAD
 Every tier shell also owns exactly one collidable `EntranceApproach`. `OfficeEntranceGeometry.Resolve` derives its 8-stud width, local-Z span, complete clearance envelope and spawn clearance from the tier floor edge and the existing PlotService-owned `SpawnLocation`. `OfficeLayoutBuilder` and `OfficePlacement` consume that same result, so overlap validation covers the exact physical route for all tiers and rotated plots. The approach touches both surfaces at the same top height without overlapping the spawn. It is rebuilt with `OfficeBuildRoot`, while `SpawnLocation`, `Player.RespawnLocation` and the stable `PlotAnchor` remain outside Stage 4 replacement ownership.
 
 All 50 production templates are server-only under `ServerStorage.OfficeTemplates`: 5 tier models, 9 room models, 27 equipment L1/L2/L3 models and 9 furniture models. Each has an anchored, invisible `Pivot`, category-specific production detail and no scripts/remotes/prompts. Tier templates contain at least six visible architectural parts, room and furniture templates at least five purpose-specific parts, and equipment L1/L2/L3 at least four/five/six structurally different parts. Runtime validation proves every template is catalog-reachable, unique and contained by its authoritative shell/room/item envelope. `OfficeLayoutBuilder` creates only common technical shell/floor/approach geometry; equipment, furniture and room identity is template-owned.
+=======
+Every tier shell also owns exactly one collidable `EntranceApproach`. Its 8-stud width and local-Z span are derived from the tier floor edge and the existing PlotService-owned `SpawnLocation`; it touches both surfaces at the same top height without overlapping the spawn. The approach is rebuilt with `OfficeBuildRoot`, while `SpawnLocation`, `Player.RespawnLocation` and the stable `PlotAnchor` remain outside Stage 4 replacement ownership.
+
+All 50 production templates are server-only under `ServerStorage.OfficeTemplates`: 5 tier models, 9 room models, 27 equipment L1/L2/L3 models and 9 furniture models. Each has an anchored, invisible `Pivot`, a distinct visible template detail, no scripts/remotes/prompts, and is cloned only when reachable from validated config. Builder-generated structural pieces remain deterministic production geometry, not test decorators.
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 
 `OfficeLayoutSerializer` copies and validates the data-only layout. Runtime specs exercise destroy/rebuild round-trip and a same-server snapshot restore path. Snapshot TTL is 15 minutes and capacity is 24. A server restart, cross-server transfer, TTL expiry or eviction loses this temporary snapshot; Stage 4 makes no persistence claim. Stage 9 will replace it with a persistent profile contract.
 
@@ -189,10 +195,18 @@ All 50 production templates are server-only under `ServerStorage.OfficeTemplates
 
 `initialCashByEnvironment` explicitly configures Development, Test and Production to 250000. Production never inherits a Development/Test fallback. This is provisional Stage 4 session funding so all building paths are testable without an income source. Stage 8 replaces the funding source through the currency interface.
 
+<<<<<<< HEAD
 The Stage 4 client is a minimal menu: persistent HUD Build button, optional `B` shortcut, five category tabs, prices, server states/errors and pagination. It is disabled until `OfficeSessionReady`; closing it never cancels a server transaction. Catalog and purchase invocations use protected calls and safe retryable errors. Catalog generations reject stale out-of-order pages, purchase pending state clears after both response and exception, and destroyed views invalidate pending callbacks. The controller and view are initialized once by the client lifecycle, so respawn does not duplicate buttons or connections.
 
 ## Verification boundary
 
 Unit/runtime specs cover config, progression, pagination, template reachability/content, placement, exact entrance geometry, serialization, currency, snapshots, rate limits, purchases, rollback, reconstruction, same-server rejoin, remotes, client invocation exceptions/stale responses, multiplayer ownership, maximum layout, production runtime and full catalog funding. `scripts/Test-Stage4.ps1` verifies files, category-specific template minima, generic-decorator removal, isolation and sourcemaps.
+=======
+The Stage 4 client is a minimal menu: persistent HUD Build button, optional `B` shortcut, five category tabs, prices, server states/errors and pagination. It is disabled until `OfficeSessionReady`; closing it never cancels a server transaction. The controller and view are initialized once by the client lifecycle, so respawn does not duplicate buttons or connections.
+
+## Verification boundary
+
+Unit/runtime specs cover config, progression, pagination, placement, geometry, serialization, currency, snapshots, rate limits, purchases, rollback, reconstruction, same-server rejoin, remotes, multiplayer ownership, maximum layout, production runtime and full catalog funding. `scripts/Test-Stage4.ps1` verifies files, templates, isolation and sourcemaps.
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 
 Rojo build, format, lint and structural tests do not execute Roblox physics, replication, multiplayer UI or profiler measurements. Solo and Start Server + 3 Players scenarios in `05_MANUAL_QA_GUIDE.md` remain a required Studio acceptance gate.

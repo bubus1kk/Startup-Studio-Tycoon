@@ -122,6 +122,7 @@ local function productionBootstrapAndRespawnTest()
 	end
 	local plotModelCountBeforeRespawn = #plots:GetChildren()
 
+<<<<<<< HEAD
 	for resetIndex = 1, 5 do
 		player:LoadCharacter()
 		TestHarness.assertTrue(
@@ -161,6 +162,26 @@ local function productionBootstrapAndRespawnTest()
 			)
 		end
 	end
+=======
+	player:LoadCharacter()
+	TestHarness.assertTrue(
+		waitUntil(function()
+			local character = player.Character
+			if character == nil or character == initialCharacter then
+				return false
+			end
+			local root = character:FindFirstChild("HumanoidRootPart")
+			if root == nil or not root:IsA("BasePart") then
+				return false
+			end
+			return (root.Position - expectedSpawnCFrame.Position).Magnitude <= 1
+		end, RUNTIME_TIMEOUT_SECONDS),
+		"Respawn did not use the assigned plot spawn"
+	)
+	TestHarness.assertEqual(player:GetAttribute("AssignedPlotId"), plotId)
+	TestHarness.assertEqual(player.RespawnLocation, spawnLocation)
+	TestHarness.assertEqual(#plots:GetChildren(), plotModelCountBeforeRespawn, "Respawn created a duplicate plot model")
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 
 	TestHarness.assertEqual(player.RespawnLocation, spawnLocation)
 	TestHarness.assertEqual(

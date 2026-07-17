@@ -84,8 +84,11 @@
 - [ ] deterministic anchors и placement keys восстанавливают одинаковый layout;
 - [ ] `PlotBounds` и `OfficeGeometryValidator` проверяют bounds, overlaps, room envelopes, doorway, spawn и entrance path;
 - [ ] каждый tier содержит один local-space `EntranceApproach`, по которому игрок проходит от стабильного `SpawnLocation` до пола офиса без прыжка;
+<<<<<<< HEAD
 - [ ] общий entrance geometry contract одновременно управляет physical approach и полным validation envelope без hardcoded path;
 - [ ] все 50 server-only templates содержат уникальную category-specific geometry, достижимы из catalog и не выходят за authoritative envelopes;
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 - [ ] duplicate/concurrent request не создаёт второй item и не списывает Cash повторно;
 - [ ] failed generation/commit откатывает reservation, layout и pending root без orphan Instances;
 - [ ] tier/upgrade replacement оставляет ровно один canonical `OfficeBuildRoot`;
@@ -93,15 +96,21 @@
 - [ ] catalog pagination имеет page size 5, stable sorting и bounded payload;
 - [ ] persistent HUD Build button переживает respawn без duplicate UI/connections;
 - [ ] menu отключён до готовности office session, а закрытие UI не отменяет server transaction;
+<<<<<<< HEAD
 - [ ] InvokeServer exception очищает pending и допускает retry; stale catalog response и callback после Destroy не меняют UI;
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 - [ ] Development/Test/Production получают явно заданные provisional Stage 4 session funds 250000;
 - [ ] full catalog стоит 205150, достижим и оставляет Cash 44850;
 - [ ] destroy/rebuild и bounded same-server snapshot round-trip проходят без DataStore;
 - [ ] snapshot TTL/capacity используют injected monotonic clock и lazy eviction;
 - [ ] Solo и Start Server + 3 Players manual QA выполнены;
 - [ ] maximum-content generation и rebuild performance проверены в Studio profiler;
+<<<<<<< HEAD
 - [ ] локальный Stage Acceptance Plugin собран, вручную установлен и `Stage 4 Full` вернул структурированный результат через `StudioTestService:EndTest`;
 - [ ] runtime result содержит минимум 57 реально выполненных тестов, а не фиксированный PASS count;
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 - [ ] production/test remotes, probes и fixtures изолированы;
 - [ ] `scripts/Test-Stage1.ps1` … `scripts/Test-Stage4.ps1`, lint и оба Rojo build проходят.
 

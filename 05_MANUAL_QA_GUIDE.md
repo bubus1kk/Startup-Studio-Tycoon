@@ -128,22 +128,34 @@ Screenshot, video, Output, Developer Console, profiler.
 
 ### Building
 
+<<<<<<< HEAD
 - перед ручными сценариями собрать и установить локальный runner по `docs/STAGE_4_AUTOMATED_ACCEPTANCE.md`, открыть Stage 4 test place и сохранить полный результат `Stage 4 Full` из dock widget/Output;
 - **Solo:** HUD Build button появляется один раз, `B` открывает то же меню, категории/цены/locked state корректны; Garage уже `Purchased`;
 - Игрок проходит от SpawnLocation до Garage без прыжка, затем после полного progression проходит тем же способом до Global HQ;
+=======
+- **Solo:** HUD Build button появляется один раз, `B` открывает то же меню, категории/цены/locked state корректны; Garage уже `Purchased`;
+- Игрок проходит от SpawnLocation до входа без прыжка;
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 - купить Development Room, её equipment/furniture, оба upgrade level и проверить `Available → Purchased`, `L2 → Available`, `L3 → MaxLevel`;
 - попытаться купить locked room/tier до prerequisite и убедиться, что Cash/layout не меняются;
 - недостаточно Cash и ровно достаточно Cash: ответ сервера отображается, state не становится ошибочно `Locked`/`Purchased`, balance не отрицателен;
 - двойной клик, повтор того же `requestId`, новый `requestId` для уже купленного item и 50–100 spam calls не создают duplicate model/debit;
 - invalid category/page и oversized payload отклоняются; invalid page непустой категории возвращает её реальные `pageCount`/`totalItems` и пустой `items`;
 - закрыть меню во время pending purchase: server transaction завершается, а повторное открытие refresh-ит текущую или предыдущую доступную страницу;
+<<<<<<< HEAD
 - выполнить Reset Character 5 раз: plot/spawn/office сохраняются, HUD button и connections не дублируются;
+=======
+- выполнить Reset Character несколько раз: plot/spawn/office сохраняются, HUD button и connections не дублируются;
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 - injected failure template: pending root исчезает, old visual остаётся, Cash/layout не меняются, orphan root отсутствует;
 - destroy/rebuild round-trip воспроизводит те же IDs, versions, placement keys и transforms;
 - выйти и зайти на тот же живой server до TTL: временный snapshot восстанавливается; после TTL/перезапуска server восстановление не гарантируется;
 - проверить tier transition и equipment L2/L3 replacement: после завершения существует ровно один `OfficeBuildRoot` и одна active model на slot;
 - пройти весь catalog: старт 250000, total debit 205150, final Cash 44850;
+<<<<<<< HEAD
 - после полного catalog проверить ровно один `SpawnLocation`, `PlotAnchor`, `OfficeBuildRoot` и `EntranceApproach`, а также отсутствие project errors в Output;
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 - **Start Server + 3 Players:** каждый видит replicated офисы, но purchase меняет только authoritative plot отправителя;
 - через test probe попытаться изменить чужой office/передать чужой plotId — сервер отклоняет, ownership maps и обе модели неизменны;
 - проверить все крайние tier anchors и maximum-content Global HQ: ни один `BasePart` не выходит за plot boundary, doorway/spawn/entrance path свободны;

@@ -10,13 +10,18 @@ local RemoteClient = require(script.Parent.Parent.Infrastructure.RemoteClient)
 
 type DependencyResolver = LifecycleRegistry.DependencyResolver
 type OfficeCatalogResponse = OfficeRemoteTypes.OfficeCatalogResponse
+<<<<<<< HEAD
 type OfficeCatalogRequest = OfficeRemoteTypes.OfficeCatalogRequest
 type OfficeCategoryId = OfficeRemoteTypes.OfficeCategoryId
 type OfficePurchaseRequest = OfficeRemoteTypes.OfficePurchaseRequest
+=======
+type OfficeCategoryId = OfficeRemoteTypes.OfficeCategoryId
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 type OfficePurchaseResponse = OfficeRemoteTypes.OfficePurchaseResponse
 type RemoteClientType = RemoteClient.Client
 type View = BuildMenuView.View
 
+<<<<<<< HEAD
 export type RemoteResolver = (name: string) -> RemoteFunction?
 export type InvokeRemote = (remote: RemoteFunction, payload: OfficeCatalogRequest | OfficePurchaseRequest) -> unknown
 export type Overrides = {
@@ -25,6 +30,8 @@ export type Overrides = {
 	invokeRemote: InvokeRemote?,
 }
 
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 type ControllerData = {
 	_player: Player,
 	_remoteClient: RemoteClientType?,
@@ -36,11 +43,14 @@ type ControllerData = {
 	_pageCount: number,
 	_pendingItemId: string?,
 	_nextRequestId: number,
+<<<<<<< HEAD
 	_catalogRequestVersion: number,
 	_purchaseRequestVersion: number,
 	_remoteResolver: RemoteResolver?,
 	_invokeRemote: InvokeRemote,
 	_isDestroyed: boolean,
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	_isInitialized: boolean,
 	_isStarted: boolean,
 }
@@ -49,6 +59,7 @@ local BuildMenuController = {}
 BuildMenuController.__index = BuildMenuController
 export type Controller = typeof(setmetatable({} :: ControllerData, BuildMenuController))
 
+<<<<<<< HEAD
 local function invokeServer(remote: RemoteFunction, payload: OfficeCatalogRequest | OfficePurchaseRequest): unknown
 	return remote:InvokeServer(payload)
 end
@@ -58,6 +69,13 @@ function BuildMenuController.new(player: Player, overrides: Overrides?): Control
 		_player = player,
 		_remoteClient = nil,
 		_view = if overrides ~= nil then overrides.view else nil,
+=======
+function BuildMenuController.new(player: Player): Controller
+	return setmetatable({
+		_player = player,
+		_remoteClient = nil,
+		_view = nil,
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		_connections = {},
 		_itemConnections = {},
 		_categoryId = "Tiers",
@@ -65,6 +83,7 @@ function BuildMenuController.new(player: Player, overrides: Overrides?): Control
 		_pageCount = 0,
 		_pendingItemId = nil,
 		_nextRequestId = 0,
+<<<<<<< HEAD
 		_catalogRequestVersion = 0,
 		_purchaseRequestVersion = 0,
 		_remoteResolver = if overrides ~= nil then overrides.remoteResolver else nil,
@@ -72,6 +91,8 @@ function BuildMenuController.new(player: Player, overrides: Overrides?): Control
 			then overrides.invokeRemote
 			else invokeServer,
 		_isDestroyed = false,
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		_isInitialized = false,
 		_isStarted = false,
 	}, BuildMenuController)
@@ -94,6 +115,7 @@ function BuildMenuController._disconnectItems(self: Controller)
 	table.clear(self._itemConnections)
 end
 
+<<<<<<< HEAD
 function BuildMenuController._getRemote(self: Controller, name: string): RemoteFunction?
 	if self._remoteResolver ~= nil then
 		return self._remoteResolver(name)
@@ -140,10 +162,20 @@ function BuildMenuController.Refresh(self: Controller)
 		return
 	end
 	local remote = self:_getRemote("RequestOfficeCatalog")
+=======
+function BuildMenuController.Refresh(self: Controller)
+	local view = self._view
+	local remoteClient = self._remoteClient
+	if view == nil or remoteClient == nil or not self._player:GetAttribute("OfficeSessionReady") then
+		return
+	end
+	local remote = remoteClient:GetFunction("RequestOfficeCatalog")
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	if remote == nil then
 		view:SetStatus("Catalog remote is unavailable.", true)
 		return
 	end
+<<<<<<< HEAD
 	self._catalogRequestVersion += 1
 	local requestVersion = self._catalogRequestVersion
 	local categoryId = self._categoryId
@@ -216,11 +248,60 @@ function BuildMenuController.Purchase(self: Controller, itemId: string)
 		return
 	end
 	local remote = self:_getRemote("RequestOfficePurchase")
+=======
+	local response = remote:InvokeServer({
+		requestId = self:_requestId(),
+		categoryId = self._categoryId,
+		page = self._page,
+	}) :: OfficeCatalogResponse
+	if not response.ok then
+		if response.error ~= nil and response.error.code == "InvalidCatalogPage" and self._page > 1 then
+			self._page = math.max(1, response.pageCount)
+			self:Refresh()
+			return
+		end
+		view:SetStatus(if response.error ~= nil then response.error.message else "Catalog request failed.", true)
+		return
+	end
+	if #response.items == 0 and self._page > 1 then
+		self._page = math.max(1, math.min(self._page - 1, response.pageCount))
+		self:Refresh()
+		return
+	end
+	self._page = response.page
+	self._pageCount = response.pageCount
+	view:SetHeader(response.cash, response.currentTierId)
+	view:SetCategory(response.categoryId)
+	view:SetPage(response.page, response.pageCount)
+	self:_disconnectItems()
+	local actionButtons = view:RenderItems(response.items :: { BuildMenuView.CatalogItem })
+	for itemId, actionButton in actionButtons do
+		table.insert(
+			self._itemConnections,
+			actionButton.Activated:Connect(function()
+				self:Purchase(itemId)
+			end)
+		)
+	end
+end
+
+function BuildMenuController.Purchase(self: Controller, itemId: string)
+	if self._pendingItemId ~= nil then
+		return
+	end
+	local remoteClient = self._remoteClient
+	local view = self._view
+	if remoteClient == nil or view == nil then
+		return
+	end
+	local remote = remoteClient:GetFunction("RequestOfficePurchase")
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	if remote == nil then
 		view:SetStatus("Purchase remote is unavailable.", true)
 		return
 	end
 	self._pendingItemId = itemId
+<<<<<<< HEAD
 	self._purchaseRequestVersion += 1
 	local requestVersion = self._purchaseRequestVersion
 	view:SetStatus("Purchase pending…", false)
@@ -246,6 +327,13 @@ function BuildMenuController.Purchase(self: Controller, itemId: string)
 			view:SetStatus("Purchase returned a mismatched response.", true)
 			return
 		end
+=======
+	view:SetStatus("Purchase pending…", false)
+	task.spawn(function()
+		local response =
+			remote:InvokeServer({ requestId = self:_requestId(), itemId = itemId }) :: OfficePurchaseResponse
+		self._pendingItemId = nil
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		if response.ok then
 			view:SetStatus("Office updated.", false)
 		else
@@ -263,7 +351,10 @@ function BuildMenuController.Start(self: Controller)
 	if playerGuiInstance == nil or not playerGuiInstance:IsA("PlayerGui") then
 		error("PlayerGui was not available for BuildMenuController", 2)
 	end
+<<<<<<< HEAD
 	self._isDestroyed = false
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	local view = BuildMenuView.new(playerGuiInstance)
 	self._view = view
 	local function updateReady()
@@ -273,7 +364,16 @@ function BuildMenuController.Start(self: Controller)
 	table.insert(
 		self._connections,
 		view:GetBuildButton().Activated:Connect(function()
+<<<<<<< HEAD
 			self:ToggleMenu()
+=======
+			if self._player:GetAttribute("OfficeSessionReady") == true then
+				view:SetOpen(not view:IsOpen())
+				if view:IsOpen() then
+					self:Refresh()
+				end
+			end
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		end)
 	)
 	table.insert(
@@ -285,28 +385,60 @@ function BuildMenuController.Start(self: Controller)
 	table.insert(
 		self._connections,
 		view:GetPreviousButton().Activated:Connect(function()
+<<<<<<< HEAD
 			self:PreviousPage()
+=======
+			if self._page > 1 then
+				self._page -= 1
+				self:Refresh()
+			end
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		end)
 	)
 	table.insert(
 		self._connections,
 		view:GetNextButton().Activated:Connect(function()
+<<<<<<< HEAD
 			self:NextPage()
+=======
+			if self._page < self._pageCount then
+				self._page += 1
+				self:Refresh()
+			end
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		end)
 	)
 	for category, categoryButton in view:GetCategoryButtons() do
 		table.insert(
 			self._connections,
 			categoryButton.Activated:Connect(function()
+<<<<<<< HEAD
 				self:_navigate(category :: OfficeCategoryId, 1)
+=======
+				self._categoryId = category :: OfficeCategoryId
+				self._page = 1
+				self:Refresh()
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 			end)
 		)
 	end
 	table.insert(
 		self._connections,
 		UserInputService.InputBegan:Connect(function(input: InputObject, processed: boolean)
+<<<<<<< HEAD
 			if not processed and input.KeyCode == Enum.KeyCode.B then
 				self:ToggleMenu()
+=======
+			if
+				not processed
+				and input.KeyCode == Enum.KeyCode.B
+				and self._player:GetAttribute("OfficeSessionReady") == true
+			then
+				view:SetOpen(not view:IsOpen())
+				if view:IsOpen() then
+					self:Refresh()
+				end
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 			end
 		end)
 	)
@@ -315,10 +447,13 @@ function BuildMenuController.Start(self: Controller)
 end
 
 function BuildMenuController.Destroy(self: Controller)
+<<<<<<< HEAD
 	self._isDestroyed = true
 	self._catalogRequestVersion += 1
 	self._purchaseRequestVersion += 1
 	self._pendingItemId = nil
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	self:_disconnectItems()
 	for _, connection in self._connections do
 		connection:Disconnect()
@@ -329,7 +464,10 @@ function BuildMenuController.Destroy(self: Controller)
 	end
 	self._view = nil
 	self._remoteClient = nil
+<<<<<<< HEAD
 	self._remoteResolver = nil
+=======
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	self._isStarted = false
 	self._isInitialized = false
 end

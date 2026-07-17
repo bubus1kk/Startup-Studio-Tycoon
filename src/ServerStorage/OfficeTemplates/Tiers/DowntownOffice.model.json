@@ -10,6 +10,7 @@
         "CanTouch": false,
         "CanQuery": false,
         "Transparency": 1,
+<<<<<<< HEAD
         "Size": [
           1,
           1,
@@ -19,12 +20,20 @@
     },
     {
       "name": "LobbyCanopy",
+=======
+        "Size": [1, 1, 1]
+      }
+    },
+    {
+      "name": "DowntownStudioLogo",
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
       "className": "Part",
       "properties": {
         "Anchored": true,
         "CanCollide": false,
         "CanTouch": false,
         "CanQuery": true,
+<<<<<<< HEAD
         "Material": "Metal",
         "Color": [
           0.84,
@@ -227,6 +236,10 @@
           1
         ],
         "Transparency": 0.4
+=======
+        "Transparency": 0.15,
+        "Size": [1.6, 0.4, 1.05]
+>>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
       }
     }
   ]
