@@ -2,16 +2,11 @@
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
-<<<<<<< HEAD
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local PlotBounds = require(ServerScriptService.Domain.PlotBounds)
 local OfficeEntranceGeometry = require(ServerScriptService.Domain.OfficeEntranceGeometry)
-=======
-
-local PlotBounds = require(ServerScriptService.Domain.PlotBounds)
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 local OfficePlacement = require(ServerScriptService.Domain.OfficePlacement)
 local OfficeProgression = require(ServerScriptService.Domain.OfficeProgression)
 local PlotTypes = require(ServerScriptService.Domain.PlotTypes)
@@ -196,7 +191,6 @@ local function allTierLocalSpaceGeometryTest()
 				`{tier.id} approach build failed: error.code={rootResult.error.code}; error.message={rootResult.error.message}`
 			)
 		end
-<<<<<<< HEAD
 		local sharedResult = OfficeEntranceGeometry.Resolve(tier, definition.origin, spawn.CFrame, spawn.Size)
 		if not sharedResult.ok then
 			error(`{tier.id} shared entrance geometry failed: {sharedResult.error.code}`)
@@ -211,8 +205,6 @@ local function allTierLocalSpaceGeometryTest()
 			(approach.Position - sharedResult.value.approachCFrame.Position).Magnitude < EPSILON,
 			`{tier.id}: shared approach CFrame drifted`
 		)
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		assertApproachGeometry(tier.id, definition, rootResult.value, spawn)
 		TestHarness.assertEqual(spawn.Parent, plotModel, `{tier.id}: SpawnLocation ownership changed`)
 		TestHarness.assertTrue(
@@ -304,7 +296,6 @@ local function transitionsRebuildAndBudgetTest()
 	fixture:Destroy()
 end
 
-<<<<<<< HEAD
 local function humanoidWalksGarageAndGlobalHQWithoutJumpTest()
 	local player = Players:GetPlayers()[1]
 	TestHarness.assertTrue(player ~= nil, "Entrance playability probe requires a Studio player")
@@ -427,8 +418,6 @@ local function humanoidWalksGarageAndGlobalHQWithoutJumpTest()
 	end
 end
 
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 function OfficeEntranceApproachSpec.tests(): { TestCase }
 	return {
 		{
@@ -439,13 +428,10 @@ function OfficeEntranceApproachSpec.tests(): { TestCase }
 			name = "tier transitions and rebuild retain one entrance approach within budgets",
 			run = transitionsRebuildAndBudgetTest,
 		},
-<<<<<<< HEAD
 		{
 			name = "Humanoid walks from SpawnLocation into Garage and Global HQ without jumping",
 			run = humanoidWalksGarageAndGlobalHQWithoutJumpTest,
 		},
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	}
 end
 

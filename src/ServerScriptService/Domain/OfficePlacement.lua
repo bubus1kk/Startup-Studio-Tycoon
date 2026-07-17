@@ -4,10 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local AppTypes = require(ReplicatedStorage.Shared.Types.AppTypes)
-<<<<<<< HEAD
 local OfficeEntranceGeometry = require(ServerScriptService.Domain.OfficeEntranceGeometry)
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 local OfficeProgression = require(ServerScriptService.Domain.OfficeProgression)
 local OfficeTypes = require(ServerScriptService.Domain.OfficeTypes)
 
@@ -85,12 +82,8 @@ function OfficePlacement.ResolveLayout(
 	tierId: string,
 	layout: OfficeLayoutState,
 	plotOrigin: CFrame,
-<<<<<<< HEAD
 	spawnCFrame: CFrame,
 	spawnSize: Vector3
-=======
-	spawnCFrame: CFrame
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 ): Result<{ ResolvedEnvelope }>
 	local resolved: { ResolvedEnvelope } = {}
 	local tier = self._progression:GetTier(tierId)
@@ -147,7 +140,6 @@ function OfficePlacement.ResolveLayout(
 		end
 		table.insert(resolved, itemResult.value)
 	end
-<<<<<<< HEAD
 	local entranceResult = OfficeEntranceGeometry.Resolve(tier, plotOrigin, spawnCFrame, spawnSize)
 	if not entranceResult.ok then
 		return entranceResult
@@ -158,24 +150,12 @@ function OfficePlacement.ResolveLayout(
 		kind = "Spawn",
 		cframe = entrance.spawnClearanceCFrame,
 		size = entrance.spawnClearanceSize,
-=======
-	table.insert(resolved, {
-		id = "SpawnLocation",
-		kind = "Spawn",
-		cframe = spawnCFrame,
-		size = Vector3.new(8, 8, 8),
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	})
 	table.insert(resolved, {
 		id = "EntrancePath",
 		kind = "Entrance",
-<<<<<<< HEAD
 		cframe = entrance.pathCFrame,
 		size = entrance.pathSize,
-=======
-		cframe = plotOrigin * CFrame.new(0, 4, 16),
-		size = Vector3.new(8, 8, 12),
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	})
 	return AppTypes.success(resolved)
 end

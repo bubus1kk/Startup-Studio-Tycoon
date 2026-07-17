@@ -55,7 +55,6 @@ function TestHarness.runAndCollect(testCases: { TestCase }): Report
 		local ok, causeValue = xpcall(testCase.run, tracebackError)
 
 		if ok then
-<<<<<<< HEAD
 			passed += 1
 			print(`[Stage4Test] PASS {testCase.name}`)
 		else
@@ -79,22 +78,10 @@ function TestHarness.runAndCollect(testCases: { TestCase }): Report
 	}
 	if report.failed == 0 then
 		print(`[Stage4Test] PASS all {report.total} runtime tests`)
-=======
-			print(`[Stage4Test] PASS {testCase.name}`)
-		else
-			table.insert(failures, `{testCase.name}: {cause}`)
-			warn(`[Stage4Test] FAIL {testCase.name}: {cause}`)
-		end
-	end
-
-	if #failures > 0 then
-		error(`Stage 4 runtime tests failed ({#failures}):\n{table.concat(failures, "\n")}`)
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	end
 	return report
 end
 
-<<<<<<< HEAD
 function TestHarness.run(testCases: { TestCase }): Report
 	local report = TestHarness.runAndCollect(testCases)
 
@@ -106,9 +93,6 @@ function TestHarness.run(testCases: { TestCase }): Report
 		error(`Stage 4 runtime tests failed ({report.failed}):\n{table.concat(messages, "\n")}`)
 	end
 	return report
-=======
-	print(`[Stage4Test] PASS all {#testCases} runtime tests`)
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 end
 
 return table.freeze(TestHarness)

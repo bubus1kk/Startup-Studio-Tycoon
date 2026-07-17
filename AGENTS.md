@@ -60,25 +60,16 @@ Validate type, range, ownership, state, cooldown and rate.
 Expected baseline:
 
 ```bash
-<<<<<<< HEAD
 stylua src tests tools
 stylua --check src tests tools
 selene src tests tools
-=======
-stylua src tests
-stylua --check src tests
-selene src tests
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 pwsh -NoProfile -File scripts/Test-Stage1.ps1
 pwsh -NoProfile -File scripts/Test-Stage2.ps1
 pwsh -NoProfile -File scripts/Test-Stage3.ps1
 pwsh -NoProfile -File scripts/Test-Stage4.ps1
 rojo build default.project.json -o build/StartupStudioTycoon.rbxl
 rojo build test.project.json -o build/StartupStudioTycoonStage4Tests.rbxl
-<<<<<<< HEAD
 rojo build stage-acceptance-plugin.project.json -o build/StageAcceptancePlugin.rbxm
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 git diff --check
 ```
 

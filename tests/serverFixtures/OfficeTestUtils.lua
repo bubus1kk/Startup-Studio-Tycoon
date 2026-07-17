@@ -49,7 +49,6 @@ function OfficeTestUtils.validatedConfig(): OfficeConfig
 	return result.value
 end
 
-<<<<<<< HEAD
 function OfficeTestUtils.createFixture(
 	userId: number,
 	buildHook: BuildHook?,
@@ -57,10 +56,6 @@ function OfficeTestUtils.createFixture(
 	configOverride: OfficeConfig?
 ): Fixture
 	local config = configOverride or OfficeTestUtils.validatedConfig()
-=======
-function OfficeTestUtils.createFixture(userId: number, buildHook: BuildHook?, initialCash: number?): Fixture
-	local config = OfficeTestUtils.validatedConfig()
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	local progression = OfficeProgression.new(config)
 	local catalog = OfficeCatalog.new(config, progression)
 	local placement = OfficePlacement.new(progression)

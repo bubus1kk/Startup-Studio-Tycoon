@@ -4,18 +4,12 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 
 local OfficeGeometryValidator = require(ServerScriptService.Domain.OfficeGeometryValidator)
-<<<<<<< HEAD
 local OfficeEntranceGeometry = require(ServerScriptService.Domain.OfficeEntranceGeometry)
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 local OfficePlacement = require(ServerScriptService.Domain.OfficePlacement)
 local OfficeProgression = require(ServerScriptService.Domain.OfficeProgression)
 local OfficeTypes = require(ServerScriptService.Domain.OfficeTypes)
 local OfficeLayoutBuilder = require(ServerScriptService.Systems.OfficeLayoutBuilder)
-<<<<<<< HEAD
 local PlotBounds = require(ServerScriptService.Domain.PlotBounds)
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 local PlotRuntimeBuilder = require(ServerScriptService.Systems.PlotRuntimeBuilder)
 local TestHarness = require(script.Parent.Parent.TestHarness)
 local OfficeTestUtils = require(script.Parent.Parent.ServerFixtures.OfficeTestUtils)
@@ -70,12 +64,8 @@ local function productionTierAnchorMapsTest()
 	local config = OfficeTestUtils.validatedConfig()
 	local progression = OfficeProgression.new(config)
 	local placement = OfficePlacement.new(progression)
-<<<<<<< HEAD
 	local spawnCFrame = definition.origin * definition.spawnOffset * CFrame.new(0, 0.5, 0)
 	local spawnSize = Vector3.new(8, 1, 8)
-=======
-	local spawnCFrame = definition.origin * definition.spawnOffset * CFrame.new(0, 4, 0)
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	local templates = ServerStorage:FindFirstChild("OfficeTemplates")
 	TestHarness.assertTrue(templates ~= nil, "OfficeTemplates missing from test DataModel")
 	if templates == nil then
@@ -89,11 +79,7 @@ local function productionTierAnchorMapsTest()
 
 	for _, tierId in { "tier_downtown", "tier_tech_campus", "tier_global_hq" } do
 		local layout = maximumLayoutForTier(config, progression, tierId)
-<<<<<<< HEAD
 		local envelopesResult = placement:ResolveLayout(tierId, layout, definition.origin, spawnCFrame, spawnSize)
-=======
-		local envelopesResult = placement:ResolveLayout(tierId, layout, definition.origin, spawnCFrame)
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		if not envelopesResult.ok then
 			error(
 				`{tierId} placement failed: error.code={envelopesResult.error.code}; error.message={envelopesResult.error.message}`
@@ -119,12 +105,8 @@ local function productionTierAnchorMapsTest()
 	end
 
 	local downtownLayout = maximumLayoutForTier(config, progression, "tier_downtown")
-<<<<<<< HEAD
 	local downtownEnvelopes =
 		placement:ResolveLayout("tier_downtown", downtownLayout, definition.origin, spawnCFrame, spawnSize)
-=======
-	local downtownEnvelopes = placement:ResolveLayout("tier_downtown", downtownLayout, definition.origin, spawnCFrame)
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	if not downtownEnvelopes.ok then
 		error(
 			`Downtown placement failed: error.code={downtownEnvelopes.error.code}; error.message={downtownEnvelopes.error.message}`
@@ -222,7 +204,6 @@ local function overlapBoundsAndRotationTest()
 	TestHarness.assertTrue(rotated.ok)
 end
 
-<<<<<<< HEAD
 local function entranceEnvelopeCoverageTest()
 	local definition = table.clone(PlotTestUtils.validatedConfig().definitions[1])
 	definition.origin = CFrame.new(31, 0, -27) * CFrame.Angles(0, math.rad(37), 0)
@@ -316,8 +297,6 @@ local function entranceOverlapPurchaseRollbackTest()
 	fixture:Destroy()
 end
 
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 local function rotatedRuntimePartsTest()
 	local definition = table.clone(PlotTestUtils.validatedConfig().definitions[1])
 	definition.origin = CFrame.new(20, 0, 20) * CFrame.Angles(0, math.rad(35), 0)
@@ -376,7 +355,6 @@ function OfficeGeometryValidatorSpec.tests(): { TestCase }
 			name = "production tier anchor maps fit maximum content and reject legacy recreation overlap",
 			run = productionTierAnchorMapsTest,
 		},
-<<<<<<< HEAD
 		{
 			name = "shared entrance envelope covers beginning middle and spawn end for all rotated tiers",
 			run = entranceEnvelopeCoverageTest,
@@ -385,8 +363,6 @@ function OfficeGeometryValidatorSpec.tests(): { TestCase }
 			name = "room entrance overlap rejects purchase and releases debit before commit",
 			run = entranceOverlapPurchaseRollbackTest,
 		},
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	}
 end
 return table.freeze(OfficeGeometryValidatorSpec)

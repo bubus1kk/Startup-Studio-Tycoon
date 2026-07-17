@@ -54,7 +54,6 @@
         },
         "OfficeSecurityProbe": {
           "$path": "tests/OfficeSecurityProbe.server.lua"
-<<<<<<< HEAD
         }
       },
       "Stage4Acceptance": {
@@ -88,8 +87,6 @@
         },
         "Stage4AcceptanceRouter": {
           "$path": "tests/acceptance/Stage4AcceptanceRouter.server.lua"
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
         }
       }
     },
@@ -123,15 +120,12 @@
         },
         "Stage4OfficeSecurityProbe": {
           "$path": "tests/OfficeSecurityProbe.client.lua"
-<<<<<<< HEAD
         },
         "ClientSpecs": {
           "$path": "tests/client"
         },
         "Stage4AcceptanceClient": {
           "$path": "tests/acceptance/Stage4ClientAcceptance.client.lua"
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
         }
       }
     },

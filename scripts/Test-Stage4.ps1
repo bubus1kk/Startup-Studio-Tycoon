@@ -47,10 +47,7 @@ $productionFiles = @(
 	"src/ServerScriptService/Domain/OfficeTypes.lua",
 	"src/ServerScriptService/Domain/OfficeCatalog.lua",
 	"src/ServerScriptService/Domain/OfficeProgression.lua",
-<<<<<<< HEAD
 	"src/ServerScriptService/Domain/OfficeEntranceGeometry.lua",
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	"src/ServerScriptService/Domain/OfficePlacement.lua",
 	"src/ServerScriptService/Domain/OfficeGeometryValidator.lua",
 	"src/ServerScriptService/Domain/OfficeLayoutSerializer.lua",
@@ -70,11 +67,7 @@ $productionFiles = @(
 $unitSpecs = @(
 	"OfficeConfigSpec", "OfficeCatalogSpec", "OfficeProgressionSpec", "OfficePlacementSpec",
 	"OfficeLayoutSerializerSpec", "SessionCurrencyServiceSpec", "OfficeSnapshotCacheSpec",
-<<<<<<< HEAD
 	"RequestRateLimiterSpec", "OfficeGeometryValidatorSpec", "OfficeTemplateContentSpec"
-=======
-	"RequestRateLimiterSpec", "OfficeGeometryValidatorSpec"
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 )
 $runtimeSpecs = @(
 	"OfficeRoomPurchaseSpec", "OfficeEntranceApproachSpec", "OfficeItemPurchaseSpec", "OfficeUpgradeSpec", "OfficeTierTransitionSpec",
@@ -86,7 +79,6 @@ $requiredTestSupport = @(
 	"tests/fixtures/InvalidOfficeDefinitions.lua",
 	"tests/serverFixtures/FailureOfficeTemplates.lua",
 	"tests/OfficeSecurityProbe.server.lua",
-<<<<<<< HEAD
 	"tests/OfficeSecurityProbe.client.lua",
 	"tests/client/BuildMenuControllerClientSpec.lua",
 	"tests/acceptance/AcceptanceTestUtils.lua",
@@ -104,9 +96,6 @@ $pluginFiles = @(
 	"tools/StageAcceptancePlugin/AcceptanceRunGuard.lua",
 	"tools/StageAcceptancePlugin/AcceptanceReportView.lua",
 	"tools/StageAcceptancePlugin/AcceptanceTypes.lua"
-=======
-	"tests/OfficeSecurityProbe.client.lua"
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 )
 
 foreach ($relativePath in $productionFiles) {
@@ -121,7 +110,6 @@ foreach ($spec in $runtimeSpecs) {
 	$relativePath = "tests/integration/$spec.lua"
 	Assert-Stage4 -Condition (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath) -PathType Leaf) -Message "Runtime spec missing: $spec"
 }
-<<<<<<< HEAD
 $testRunner = Read-ProjectFile "tests/TestRunner.server.lua"
 foreach ($spec in @("OfficeEntranceApproachSpec", "OfficeFullLayoutPerformanceSpec", "OfficeRejoinSpec", "OfficeMultiplayerSpec", "OfficeRemoteSpec", "ProductionOfficeRuntimeSpec")) {
 	Assert-Stage4 -Condition ($testRunner.Contains($spec)) -Message "Required runtime spec is not routed by TestRunner: $spec"
@@ -155,11 +143,6 @@ foreach ($relativePath in $pluginFiles) {
 foreach ($relativePath in @("stage-acceptance-plugin.project.json", "scripts/Build-StageAcceptancePlugin.ps1", "docs/STAGE_4_AUTOMATED_ACCEPTANCE.md")) {
 	Assert-Stage4 -Condition (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath) -PathType Leaf) -Message "Automated acceptance workflow file missing: $relativePath"
 }
-=======
-foreach ($relativePath in $requiredTestSupport) {
-	Assert-Stage4 -Condition (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath) -PathType Leaf) -Message "Stage 4 fixture/probe missing: $relativePath"
-}
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 
 $officeConfig = Read-ProjectFile "src/ServerStorage/Config/OfficeDefinitions.lua"
 foreach ($tier in @("Garage", "Small Loft", "Downtown Office", "Tech Campus", "Global HQ")) {
@@ -206,7 +189,6 @@ foreach ($templateName in $expectedTemplates) {
 }
 $hashes = @{}
 $geometrySignatures = @{}
-<<<<<<< HEAD
 $minimumVisiblePartsByCategory = @{
 	Tiers = 6
 	Rooms = 5
@@ -233,14 +215,6 @@ foreach ($template in $templates) {
 		Assert-Stage4 -Condition ($level -ge 1 -and $level -le 3) -Message "Equipment template level missing: $($template.Name)"
 		Assert-Stage4 -Condition (($model.children.Count - 1) -ge ($level + 3)) -Message "Equipment level lacks structural detail beyond repeated displays: $($template.Name)"
 	}
-=======
-foreach ($template in $templates) {
-	$model = Get-Content -Raw -LiteralPath $template.FullName | ConvertFrom-Json
-	Assert-Stage4 -Condition ($model.className -eq "Model") -Message "Template root must be Model: $($template.Name)"
-	Assert-Stage4 -Condition ($model.children.Count -ge 2) -Message "Pivot-only template is forbidden: $($template.Name)"
-	Assert-Stage4 -Condition ($model.children[0].name -eq "Pivot") -Message "Template Pivot missing: $($template.Name)"
-	Assert-Stage4 -Condition (-not (($model.children | ForEach-Object { $_.name }) -match 'Signature|Placeholder|TemplateDetail')) -Message "Placeholder template detail found: $($template.Name)"
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	$hash = (Get-FileHash -LiteralPath $template.FullName -Algorithm SHA256).Hash
 	$hashes[$hash] = $true
 	$geometrySignature = @( $model.children | Select-Object -Skip 1 | ForEach-Object {
@@ -255,7 +229,6 @@ Assert-Stage4 -Condition ($layoutBuilder.Contains("clone.PrimaryPart = pivot")) 
 Assert-Stage4 -Condition ($layoutBuilder.Contains("base * CFrame.new")) -Message "Tier geometry must preserve plot-origin rotation"
 Assert-Stage4 -Condition (-not $layoutBuilder.Contains("CFrame.new(center.Position")) -Message "Tier geometry must not reconstruct world-space centers"
 Assert-Stage4 -Condition ($layoutBuilder.Contains('"EntranceApproach"')) -Message "Tier geometry must include EntranceApproach"
-<<<<<<< HEAD
 Assert-Stage4 -Condition ($layoutBuilder.Contains("OfficeEntranceGeometry.Resolve")) -Message "EntranceApproach must use shared entrance geometry"
 Assert-Stage4 -Condition (-not $layoutBuilder.Contains("_decorateItem")) -Message "Equipment and furniture visuals must come from production templates"
 foreach ($genericDetail in @("BackPartition", "AccentLeft", "FurnitureBody", "WorkSurface", "Display{screenIndex}")) {
@@ -270,14 +243,10 @@ $templateContentSpec = Read-ProjectFile "tests/unit/OfficeTemplateContentSpec.lu
 foreach ($contract in @("reachableCount, 50", "actualCount, 50", "CATEGORY_MINIMUM_VISIBLE_PARTS", "duplicates geometry")) {
 	Assert-Stage4 -Condition ($templateContentSpec.Contains($contract)) -Message "Runtime template-content regression is missing: $contract"
 }
-=======
-Assert-Stage4 -Condition ($layoutBuilder.Contains("spawnOfficeEdgeZ")) -Message "EntranceApproach must derive its endpoint from the stable plot spawn"
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 $entranceApproachSpec = Read-ProjectFile "tests/integration/OfficeEntranceApproachSpec.lua"
 foreach ($contract in @("all five tiers", "PlotBounds.containsBox", "previousApproach.Parent == nil", "INSTANCE_BUDGET", "BASE_PART_BUDGET")) {
 	Assert-Stage4 -Condition ($entranceApproachSpec.Contains($contract)) -Message "Entrance approach regression is missing: $contract"
 }
-<<<<<<< HEAD
 $geometrySpec = Read-ProjectFile "tests/unit/OfficeGeometryValidatorSpec.lua"
 foreach ($contract in @("beginning = 0.08", "middle = 0.5", "nearSpawn = 0.92", "releases debit before commit")) {
 	Assert-Stage4 -Condition ($geometrySpec.Contains($contract)) -Message "Shared entrance validation regression is missing: $contract"
@@ -292,8 +261,6 @@ foreach ($contract in @("_catalogRequestVersion", "_isCurrentView", "Purchase re
 foreach ($contract in @("simulated transport exception", "Purchase retry", "out-of-order", "callsAfterDestroy")) {
 	Assert-Stage4 -Condition ($buildMenuClientSpec.Contains($contract)) -Message "Build menu client runtime regression missing: $contract"
 }
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 
 $remoteDefinitions = Read-ProjectFile "src/ReplicatedStorage/Shared/Remotes/RemoteDefinitions.lua"
 foreach ($remoteName in @("RequestOfficeCatalog", "RequestOfficePurchase")) {
@@ -333,13 +300,9 @@ foreach ($doc in @("AGENTS.md", "04_STAGE_CHECKLIST.md", "05_MANUAL_QA_GUIDE.md"
 	Assert-Stage4 -Condition (Test-Path -LiteralPath (Join-Path $projectRoot $doc) -PathType Leaf) -Message "Required Stage 4 documentation missing: $doc"
 }
 $manualQa = Read-ProjectFile "05_MANUAL_QA_GUIDE.md"
-<<<<<<< HEAD
 Assert-Stage4 -Condition ($manualQa.Contains("SpawnLocation до Garage без прыжка")) -Message "Manual QA must require a jump-free Garage entrance walk"
 Assert-Stage4 -Condition ($manualQa.Contains("Global HQ")) -Message "Manual QA must require a jump-free Global HQ entrance walk"
 Assert-Stage4 -Condition ($manualQa.Contains("Reset Character 5 раз")) -Message "Manual QA must require five respawns"
-=======
-Assert-Stage4 -Condition ($manualQa.Contains("Игрок проходит от SpawnLocation до входа без прыжка")) -Message "Manual QA must require a jump-free entrance walk"
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 $agents = Read-ProjectFile "AGENTS.md"
 Assert-Stage4 -Condition ($agents.Contains("scripts/Test-Stage4.ps1")) -Message "AGENTS required checks do not include Stage 4"
 $ci = Read-ProjectFile ".github/workflows/ci.yml"
@@ -349,7 +312,6 @@ Assert-Stage4 -Condition ($ci.Contains("StartupStudioTycoonStage4Tests.rbxl")) -
 
 $productionProjectText = Read-ProjectFile "default.project.json"
 $testProjectText = Read-ProjectFile "test.project.json"
-<<<<<<< HEAD
 $pluginProjectText = Read-ProjectFile "stage-acceptance-plugin.project.json"
 $testProject = $testProjectText | ConvertFrom-Json
 Assert-Stage4 -Condition (-not $productionProjectText.Contains("tests/")) -Message "Production project maps test content"
@@ -369,31 +331,19 @@ Assert-Stage4 -Condition (-not $pluginProjectText.Contains('"src/')) -Message "P
 Assert-Stage4 -Condition (-not $pluginProjectText.Contains('"tests/')) -Message "Plugin project maps test-place sources"
 Assert-Stage4 -Condition (-not $productionProjectText.Contains("OfficeSecurityProbe")) -Message "Security probe leaked into production project"
 foreach ($testOnlyName in @("TestSupport", "Stage2Tests", "ForeignOwnershipProbe", "OfficeSecurityProbe", "Stage4Acceptance")) {
-=======
-$testProject = $testProjectText | ConvertFrom-Json
-Assert-Stage4 -Condition (-not $productionProjectText.Contains("tests/")) -Message "Production project maps test content"
-Assert-Stage4 -Condition ($testProject.name -eq "StartupStudioTycoonStage4Tests") -Message "Stage 4 test project name is incorrect"
-Assert-Stage4 -Condition ($testProject.tree.ServerStorage.OfficeTemplates.'$path' -eq "src/ServerStorage/OfficeTemplates") -Message "Test project does not map server-only office templates"
-Assert-Stage4 -Condition (-not $productionProjectText.Contains("OfficeSecurityProbe")) -Message "Security probe leaked into production project"
-foreach ($testOnlyName in @("TestSupport", "Stage2Tests", "ForeignOwnershipProbe", "OfficeSecurityProbe")) {
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	Assert-Stage4 -Condition (-not $productionProjectText.Contains($testOnlyName)) -Message "Test-only mapping leaked into production project: $testOnlyName"
 }
 
 $productionSourcemapPath = [System.IO.Path]::GetTempFileName()
 $testSourcemapPath = [System.IO.Path]::GetTempFileName()
-<<<<<<< HEAD
 $pluginSourcemapPath = [System.IO.Path]::GetTempFileName()
 $pluginBuildTempBase = [System.IO.Path]::GetTempFileName()
 $pluginBuildPath = [System.IO.Path]::ChangeExtension($pluginBuildTempBase, ".rbxm")
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 try {
 	& rojo sourcemap (Join-Path $projectRoot "default.project.json") --output $productionSourcemapPath | Out-Host
 	if ($LASTEXITCODE -ne 0) { throw "Production sourcemap failed with exit code $LASTEXITCODE" }
 	& rojo sourcemap (Join-Path $projectRoot "test.project.json") --output $testSourcemapPath | Out-Host
 	if ($LASTEXITCODE -ne 0) { throw "Test sourcemap failed with exit code $LASTEXITCODE" }
-<<<<<<< HEAD
 	& rojo sourcemap (Join-Path $projectRoot "stage-acceptance-plugin.project.json") --output $pluginSourcemapPath | Out-Host
 	if ($LASTEXITCODE -ne 0) { throw "Plugin sourcemap failed with exit code $LASTEXITCODE" }
 	& rojo build (Join-Path $projectRoot "stage-acceptance-plugin.project.json") -o $pluginBuildPath | Out-Host
@@ -412,24 +362,13 @@ try {
 	Assert-Stage4 -Condition (-not (Get-Content -Raw -LiteralPath $testSourcemapPath).Contains('"name":"StageAcceptancePlugin"')) -Message "Plugin entry leaked into test sourcemap"
 	Assert-Stage4 -Condition (-not (Get-Content -Raw -LiteralPath $testSourcemapPath).Contains('"name":"AcceptanceReportView"')) -Message "Plugin UI leaked into test sourcemap"
 	Assert-Stage4 -Condition ((Get-Item -LiteralPath $pluginBuildPath).Length -gt 0) -Message "Plugin build output is empty"
-=======
-	$productionMap = Get-Content -Raw -LiteralPath $productionSourcemapPath | ConvertFrom-Json
-	$testMap = Get-Content -Raw -LiteralPath $testSourcemapPath | ConvertFrom-Json
-	$null = Assert-SourcemapPath -Root $productionMap -Segments @("ServerScriptService", "Services", "OfficeBuildingService") -Description "Production OfficeBuildingService"
-	$null = Assert-SourcemapPath -Root $productionMap -Segments @("ServerStorage", "Config", "OfficeDefinitions") -Description "Production office configuration"
-	$null = Assert-SourcemapPath -Root $testMap -Segments @("ServerScriptService", "Stage2Tests", "OfficeSecurityProbe") -Description "Test-only office security server probe"
-	Assert-Stage4 -Condition (-not (Get-Content -Raw -LiteralPath $productionSourcemapPath).Contains("OfficeSecurityProbe")) -Message "Test-only office probe leaked into production sourcemap"
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 }
 finally {
 	Remove-Item -LiteralPath $productionSourcemapPath -Force -ErrorAction SilentlyContinue
 	Remove-Item -LiteralPath $testSourcemapPath -Force -ErrorAction SilentlyContinue
-<<<<<<< HEAD
 	Remove-Item -LiteralPath $pluginSourcemapPath -Force -ErrorAction SilentlyContinue
 	Remove-Item -LiteralPath $pluginBuildPath -Force -ErrorAction SilentlyContinue
 	Remove-Item -LiteralPath $pluginBuildTempBase -Force -ErrorAction SilentlyContinue
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 }
 
 Write-Host "Stage 4 structural tests passed ($script:assertionCount assertions)."

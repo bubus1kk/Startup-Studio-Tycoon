@@ -4,10 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local AppTypes = require(ReplicatedStorage.Shared.Types.AppTypes)
-<<<<<<< HEAD
 local OfficeEntranceGeometry = require(ServerScriptService.Domain.OfficeEntranceGeometry)
-=======
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 local OfficeGeometryValidator = require(ServerScriptService.Domain.OfficeGeometryValidator)
 local OfficePlacement = require(ServerScriptService.Domain.OfficePlacement)
 local OfficeProgression = require(ServerScriptService.Domain.OfficeProgression)
@@ -35,14 +32,6 @@ local OfficeLayoutBuilder = {}
 OfficeLayoutBuilder.__index = OfficeLayoutBuilder
 export type Builder = typeof(setmetatable({} :: BuilderData, OfficeLayoutBuilder))
 
-<<<<<<< HEAD
-=======
-local ENTRANCE_APPROACH_WIDTH = 8
-local ENTRANCE_CORRIDOR_HALF_WIDTH = 5
-local ENTRANCE_CORRIDOR_START_Z = 12
-local FLOOR_THICKNESS = 1
-
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 local TIER_COLORS = {
 	tier_garage = Color3.fromRGB(84, 94, 112),
 	tier_small_loft = Color3.fromRGB(96, 119, 139),
@@ -91,15 +80,6 @@ local function createPart(
 	return part
 end
 
-<<<<<<< HEAD
-=======
-local function projectedHalfExtent(part: BasePart, worldAxis: Vector3): number
-	return math.abs(part.CFrame.RightVector:Dot(worldAxis)) * part.Size.X * 0.5
-		+ math.abs(part.CFrame.UpVector:Dot(worldAxis)) * part.Size.Y * 0.5
-		+ math.abs(part.CFrame.LookVector:Dot(worldAxis)) * part.Size.Z * 0.5
-end
-
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 function OfficeLayoutBuilder.new(
 	templates: Instance,
 	config: OfficeConfig,
@@ -168,27 +148,18 @@ function OfficeLayoutBuilder._decorateTier(
 	local halfX = size.X * 0.5
 	local halfZ = size.Z * 0.5
 	local wallThickness = 1
-<<<<<<< HEAD
 	local backDepth = math.max(1, OfficeEntranceGeometry.CORRIDOR_START_Z + halfZ)
-=======
-	local backDepth = math.max(1, ENTRANCE_CORRIDOR_START_Z + halfZ)
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 	local backCenterZ = -halfZ + backDepth * 0.5
 	createPart(
 		model,
 		"FloorBack",
-<<<<<<< HEAD
 		Vector3.new(size.X, OfficeEntranceGeometry.FLOOR_THICKNESS, backDepth),
-=======
-		Vector3.new(size.X, FLOOR_THICKNESS, backDepth),
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		base * CFrame.new(0, 0.5, backCenterZ),
 		floorColor,
 		Enum.Material.SmoothPlastic,
 		true
 	)
 
-<<<<<<< HEAD
 	local entranceResult = OfficeEntranceGeometry.Resolve(tier, origin, spawn.CFrame, spawn.Size)
 	if not entranceResult.ok then
 		error(`Tier {tier.id} entrance geometry failed: {entranceResult.error.code}`, 2)
@@ -199,27 +170,11 @@ function OfficeLayoutBuilder._decorateTier(
 		"EntranceApproach",
 		entrance.approachSize,
 		entrance.approachCFrame,
-=======
-	local plotZAxis = origin:VectorToWorldSpace(Vector3.zAxis)
-	local spawnLocalPosition = origin:PointToObjectSpace(spawn.Position)
-	local spawnOfficeEdgeZ = spawnLocalPosition.Z - projectedHalfExtent(spawn, plotZAxis)
-	local floorEntranceEdgeZ = shellPosition.Z + ENTRANCE_CORRIDOR_START_Z
-	local approachDepth = spawnOfficeEdgeZ - floorEntranceEdgeZ
-	if approachDepth <= 0 then
-		error(`Tier {tier.id} has no positive entrance approach span`, 2)
-	end
-	createPart(
-		model,
-		"EntranceApproach",
-		Vector3.new(ENTRANCE_APPROACH_WIDTH, FLOOR_THICKNESS, approachDepth),
-		base * CFrame.new(0, 0.5, ENTRANCE_CORRIDOR_START_Z + approachDepth * 0.5),
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		floorColor,
 		Enum.Material.SmoothPlastic,
 		true
 	)
 
-<<<<<<< HEAD
 	local frontDepth = halfZ - OfficeEntranceGeometry.CORRIDOR_START_Z
 	if frontDepth > 0 then
 		local sideWidth = halfX - OfficeEntranceGeometry.CORRIDOR_HALF_WIDTH
@@ -229,17 +184,6 @@ function OfficeLayoutBuilder._decorateTier(
 			"FloorFrontLeft",
 			Vector3.new(sideWidth, OfficeEntranceGeometry.FLOOR_THICKNESS, frontDepth),
 			base * CFrame.new(-(OfficeEntranceGeometry.CORRIDOR_HALF_WIDTH + sideWidth * 0.5), 0.5, frontCenterZ),
-=======
-	local frontDepth = halfZ - ENTRANCE_CORRIDOR_START_Z
-	if frontDepth > 0 then
-		local sideWidth = halfX - ENTRANCE_CORRIDOR_HALF_WIDTH
-		local frontCenterZ = ENTRANCE_CORRIDOR_START_Z + frontDepth * 0.5
-		createPart(
-			model,
-			"FloorFrontLeft",
-			Vector3.new(sideWidth, FLOOR_THICKNESS, frontDepth),
-			base * CFrame.new(-(ENTRANCE_CORRIDOR_HALF_WIDTH + sideWidth * 0.5), 0.5, frontCenterZ),
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 			floorColor,
 			Enum.Material.SmoothPlastic,
 			true
@@ -247,13 +191,8 @@ function OfficeLayoutBuilder._decorateTier(
 		createPart(
 			model,
 			"FloorFrontRight",
-<<<<<<< HEAD
 			Vector3.new(sideWidth, OfficeEntranceGeometry.FLOOR_THICKNESS, frontDepth),
 			base * CFrame.new(OfficeEntranceGeometry.CORRIDOR_HALF_WIDTH + sideWidth * 0.5, 0.5, frontCenterZ),
-=======
-			Vector3.new(sideWidth, FLOOR_THICKNESS, frontDepth),
-			base * CFrame.new(ENTRANCE_CORRIDOR_HALF_WIDTH + sideWidth * 0.5, 0.5, frontCenterZ),
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 			floorColor,
 			Enum.Material.SmoothPlastic,
 			true
@@ -290,7 +229,6 @@ function OfficeLayoutBuilder._decorateTier(
 	createPart(
 		model,
 		"FrontLeftWall",
-<<<<<<< HEAD
 		Vector3.new(halfX - OfficeEntranceGeometry.CORRIDOR_HALF_WIDTH, size.Y, wallThickness),
 		base
 			* CFrame.new(
@@ -298,12 +236,6 @@ function OfficeLayoutBuilder._decorateTier(
 						OfficeEntranceGeometry.CORRIDOR_HALF_WIDTH
 						+ (halfX - OfficeEntranceGeometry.CORRIDOR_HALF_WIDTH) * 0.5
 					),
-=======
-		Vector3.new(halfX - ENTRANCE_CORRIDOR_HALF_WIDTH, size.Y, wallThickness),
-		base
-			* CFrame.new(
-				-(ENTRANCE_CORRIDOR_HALF_WIDTH + (halfX - ENTRANCE_CORRIDOR_HALF_WIDTH) * 0.5),
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 				wallY,
 				halfZ - 0.5
 			),
@@ -314,17 +246,10 @@ function OfficeLayoutBuilder._decorateTier(
 	createPart(
 		model,
 		"FrontRightWall",
-<<<<<<< HEAD
 		Vector3.new(halfX - OfficeEntranceGeometry.CORRIDOR_HALF_WIDTH, size.Y, wallThickness),
 		base
 			* CFrame.new(
 				OfficeEntranceGeometry.CORRIDOR_HALF_WIDTH + (halfX - OfficeEntranceGeometry.CORRIDOR_HALF_WIDTH) * 0.5,
-=======
-		Vector3.new(halfX - ENTRANCE_CORRIDOR_HALF_WIDTH, size.Y, wallThickness),
-		base
-			* CFrame.new(
-				ENTRANCE_CORRIDOR_HALF_WIDTH + (halfX - ENTRANCE_CORRIDOR_HALF_WIDTH) * 0.5,
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 				wallY,
 				halfZ - 0.5
 			),
@@ -350,87 +275,6 @@ function OfficeLayoutBuilder._decorateRoom(
 		Enum.Material.SmoothPlastic,
 		false
 	)
-<<<<<<< HEAD
-=======
-	createPart(
-		model,
-		"BackPartition",
-		Vector3.new(15, 6, 0.35),
-		cframe * CFrame.new(0, 3, -7.3),
-		color,
-		Enum.Material.SmoothPlastic,
-		false
-	)
-	createPart(
-		model,
-		"AccentLeft",
-		Vector3.new(0.35, 4, 8),
-		cframe * CFrame.new(-7.3, 2, -3),
-		color,
-		Enum.Material.Neon,
-		false
-	)
-end
-
-function OfficeLayoutBuilder._decorateItem(
-	_self: Builder,
-	model: Model,
-	item: OfficeTypes.ItemDefinition,
-	cframe: CFrame,
-	level: number
-)
-	local roomColor = ROOM_COLORS[item.requiredRoomId]
-	if item.kind == "Equipment" then
-		createPart(
-			model,
-			"Body",
-			Vector3.new(5.5, 2.5, 3.5),
-			cframe * CFrame.new(0, 1.25, 0),
-			roomColor,
-			Enum.Material.Metal,
-			true
-		)
-		createPart(
-			model,
-			"WorkSurface",
-			Vector3.new(5.8, 0.3, 3.8),
-			cframe * CFrame.new(0, 2.65, 0),
-			Color3.fromRGB(220, 224, 232),
-			Enum.Material.SmoothPlastic,
-			true
-		)
-		for screenIndex = 1, level do
-			createPart(
-				model,
-				`Display{screenIndex}`,
-				Vector3.new(1.4, 1.4, 0.2),
-				cframe * CFrame.new((screenIndex - (level + 1) * 0.5) * 1.6, 3.5, -1),
-				roomColor:Lerp(Color3.new(1, 1, 1), 0.25),
-				Enum.Material.Neon,
-				false
-			)
-		end
-	else
-		createPart(
-			model,
-			"FurnitureBody",
-			Vector3.new(3.6, 2.8, 2.4),
-			cframe * CFrame.new(0, 1.4, 0),
-			roomColor:Lerp(Color3.new(1, 1, 1), 0.35),
-			Enum.Material.Wood,
-			true
-		)
-		createPart(
-			model,
-			"FurnitureAccent",
-			Vector3.new(3.2, 0.25, 2),
-			cframe * CFrame.new(0, 2.95, 0),
-			roomColor,
-			Enum.Material.Neon,
-			false
-		)
-	end
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 end
 
 function OfficeLayoutBuilder.BuildReplacementRoot(
@@ -519,10 +363,6 @@ function OfficeLayoutBuilder.BuildReplacementRoot(
 				local itemBase = placementResult.value.cframe * item.envelope.localOffset:Inverse()
 				model.Name = item.id
 				model:PivotTo(itemBase)
-<<<<<<< HEAD
-=======
-				self:_decorateItem(model, item, itemBase, level)
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 				model.Parent = if item.kind == "Equipment" then equipmentFolder else furnitureFolder
 			end
 		end
@@ -531,12 +371,8 @@ function OfficeLayoutBuilder.BuildReplacementRoot(
 			layout.officeTierId,
 			layout,
 			context.definition.origin,
-<<<<<<< HEAD
 			spawn.CFrame,
 			spawn.Size
-=======
-			spawn.CFrame * CFrame.new(0, 3.5, 0)
->>>>>>> 94818332a6f52a94409e8f7b68c861c2ad26d4b6
 		)
 		if not envelopesResult.ok then
 			return envelopesResult
