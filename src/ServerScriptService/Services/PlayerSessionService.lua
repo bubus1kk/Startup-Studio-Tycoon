@@ -7,12 +7,18 @@ local AppTypes = require(ReplicatedStorage.Shared.Types.AppTypes)
 local LifecycleRegistry = require(ReplicatedStorage.Shared.Infrastructure.LifecycleRegistry)
 local LoggerTypes = require(ReplicatedStorage.Shared.Types.LoggerTypes)
 local PlotTypes = require(ServerScriptService.Domain.PlotTypes)
+local OfficeBuildingService = require(ServerScriptService.Services.OfficeBuildingService)
+local OfficeSnapshotCache = require(ServerScriptService.Services.OfficeSnapshotCache)
 local PlotService = require(ServerScriptService.Services.PlotService)
+local SessionCurrencyService = require(ServerScriptService.Services.SessionCurrencyService)
 
 type DependencyResolver = LifecycleRegistry.DependencyResolver
 type Logger = LoggerTypes.Logger
 type PlotSpawnContext = PlotTypes.PlotSpawnContext
 type PlotServiceType = PlotService.Service
+type OfficeServiceType = OfficeBuildingService.Service
+type SnapshotCache = OfficeSnapshotCache.Cache
+type CurrencyServiceType = SessionCurrencyService.Service
 type Result<T> = AppTypes.Result<T>
 
 type PlayerSession = {
@@ -30,6 +36,9 @@ type ServiceData = {
 	_logger: Logger,
 	_enableSpawnDiagnostics: boolean,
 	_plotService: PlotServiceType?,
+	_officeService: OfficeServiceType?,
+	_currencyService: CurrencyServiceType?,
+	_snapshotCache: SnapshotCache,
 	_sessions: { [number]: PlayerSession },
 	_playerAddedConnection: RBXScriptConnection?,
 	_playerRemovingConnection: RBXScriptConnection?,
@@ -53,12 +62,20 @@ local function formatPosition(position: Vector3?): string
 	return string.format("%.3f,%.3f,%.3f", position.X, position.Y, position.Z)
 end
 
-function PlayerSessionService.new(players: Players, logger: Logger, enableSpawnDiagnostics: boolean): Service
+function PlayerSessionService.new(
+	players: Players,
+	logger: Logger,
+	enableSpawnDiagnostics: boolean,
+	snapshotCache: SnapshotCache
+): Service
 	return setmetatable({
 		_players = players,
 		_logger = logger,
 		_enableSpawnDiagnostics = enableSpawnDiagnostics,
 		_plotService = nil,
+		_officeService = nil,
+		_currencyService = nil,
+		_snapshotCache = snapshotCache,
 		_sessions = {},
 		_playerAddedConnection = nil,
 		_playerRemovingConnection = nil,
@@ -73,6 +90,8 @@ function PlayerSessionService.Init(self: Service, dependencies: DependencyResolv
 		error("PlayerSessionService.Init can only run once", 2)
 	end
 	self._plotService = dependencies:Require("PlotService") :: PlotServiceType
+	self._officeService = dependencies:Require("OfficeBuildingService") :: OfficeServiceType
+	self._currencyService = dependencies:Require("SessionCurrencyService") :: CurrencyServiceType
 	self._isInitialized = true
 end
 
@@ -305,8 +324,32 @@ function PlayerSessionService.BeginSession(self: Service, player: Player): Resul
 	end
 
 	local plotId = assignmentResult.value.plotId
+	local currencyService = self._currencyService :: CurrencyServiceType
+	local officeService = self._officeService :: OfficeServiceType
+	local snapshot = self._snapshotCache:Peek(player.UserId)
+	local currencyResult = if snapshot ~= nil
+		then currencyService:RestoreSession(player.UserId, snapshot.currency)
+		else currencyService:OpenSession(player.UserId)
+	if not currencyResult.ok then
+		player.RespawnLocation = nil
+		plotService:ReleasePlayer(player.UserId)
+		player:Kick(PLOT_FAILURE_KICK_MESSAGE)
+		return AppTypes.failure(currencyResult.error.code, currencyResult.error.message, currencyResult.error.details)
+	end
+	local officeResult = officeService:PrepareSession(player.UserId, if snapshot ~= nil then snapshot.layout else nil)
+	if not officeResult.ok then
+		officeService:AbortSession(player.UserId)
+		currencyService:AbortSession(player.UserId)
+		player.RespawnLocation = nil
+		plotService:ReleasePlayer(player.UserId)
+		player:Kick(PLOT_FAILURE_KICK_MESSAGE)
+		return AppTypes.failure("SessionPreparationFailed", "Office session could not be prepared", nil)
+	end
 	local spawnContext = plotService:GetSpawnContextForUserId(player.UserId)
 	if spawnContext == nil or spawnContext.plotId ~= plotId then
+		officeService:AbortSession(player.UserId)
+		currencyService:AbortSession(player.UserId)
+		player.RespawnLocation = nil
 		plotService:ReleasePlayer(player.UserId)
 		self._logger:Error("player_plot_spawn_unavailable", {
 			userId = player.UserId,
@@ -335,6 +378,10 @@ function PlayerSessionService.BeginSession(self: Service, player: Player): Resul
 		appearanceConnection = appearanceConnection,
 	}
 	player:SetAttribute("AssignedPlotId", plotId)
+	player:SetAttribute("OfficeSessionReady", true)
+	if snapshot ~= nil then
+		self._snapshotCache:Consume(player.UserId)
+	end
 
 	local existingCharacter = player.Character
 	if existingCharacter ~= nil then
@@ -346,7 +393,6 @@ function PlayerSessionService.BeginSession(self: Service, player: Player): Resul
 			self:_positionCharacter(player, existingCharacter, "ExistingCharacterAppearanceLoaded")
 		end
 	end
-
 	return AppTypes.success(true)
 end
 
@@ -375,6 +421,27 @@ function PlayerSessionService.EndSession(self: Service, player: Player): Result<
 	end
 	if player:GetAttribute("AssignedPlotId") ~= nil then
 		player:SetAttribute("AssignedPlotId", nil)
+	end
+	if player:GetAttribute("OfficeSessionReady") ~= nil then
+		player:SetAttribute("OfficeSessionReady", nil)
+	end
+	local officeService = self._officeService
+	local currencyService = self._currencyService
+	if officeService ~= nil and currencyService ~= nil then
+		officeService:StopPurchases(player.UserId)
+		local layoutResult = officeService:ExportLayout(player.UserId)
+		local currencyResult = currencyService:ExportSession(player.UserId)
+		if layoutResult.ok and currencyResult.ok then
+			self._snapshotCache:Put(player.UserId, layoutResult.value, currencyResult.value)
+		else
+			self._logger:Warn("player_session_snapshot_skipped", {
+				userId = player.UserId,
+				layoutReady = layoutResult.ok,
+				currencyReady = currencyResult.ok,
+			})
+		end
+		officeService:CloseSession(player.UserId)
+		currencyService:CloseSession(player.UserId)
 	end
 	if plotService ~= nil then
 		local releaseResult = plotService:ReleasePlayer(player.UserId)
@@ -438,6 +505,9 @@ function PlayerSessionService.Destroy(self: Service)
 	end
 
 	self._plotService = nil
+	self._officeService = nil
+	self._currencyService = nil
+	self._snapshotCache:Destroy()
 	self._isStarted = false
 	self._isInitialized = false
 end

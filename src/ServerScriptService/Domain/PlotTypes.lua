@@ -52,6 +52,7 @@ export type PlotSpawnContext = {
 export type PlotContext = {
 	definition: PlotDefinition,
 	model: Model,
+	generationToken: number,
 }
 
 return table.freeze({})

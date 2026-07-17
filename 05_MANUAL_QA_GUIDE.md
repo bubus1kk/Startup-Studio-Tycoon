@@ -128,14 +128,26 @@ Screenshot, video, Output, Developer Console, profiler.
 
 ### Building
 
-- недостаточно Cash;
-- ровно достаточно Cash;
-- двойной клик;
-- spam;
-- prerequisite;
-- следующая комната;
-- выход сразу после покупки;
-- rejoin.
+- **Solo:** HUD Build button появляется один раз, `B` открывает то же меню, категории/цены/locked state корректны; Garage уже `Purchased`;
+- Игрок проходит от SpawnLocation до входа без прыжка;
+- купить Development Room, её equipment/furniture, оба upgrade level и проверить `Available → Purchased`, `L2 → Available`, `L3 → MaxLevel`;
+- попытаться купить locked room/tier до prerequisite и убедиться, что Cash/layout не меняются;
+- недостаточно Cash и ровно достаточно Cash: ответ сервера отображается, state не становится ошибочно `Locked`/`Purchased`, balance не отрицателен;
+- двойной клик, повтор того же `requestId`, новый `requestId` для уже купленного item и 50–100 spam calls не создают duplicate model/debit;
+- invalid category/page и oversized payload отклоняются; invalid page непустой категории возвращает её реальные `pageCount`/`totalItems` и пустой `items`;
+- закрыть меню во время pending purchase: server transaction завершается, а повторное открытие refresh-ит текущую или предыдущую доступную страницу;
+- выполнить Reset Character несколько раз: plot/spawn/office сохраняются, HUD button и connections не дублируются;
+- injected failure template: pending root исчезает, old visual остаётся, Cash/layout не меняются, orphan root отсутствует;
+- destroy/rebuild round-trip воспроизводит те же IDs, versions, placement keys и transforms;
+- выйти и зайти на тот же живой server до TTL: временный snapshot восстанавливается; после TTL/перезапуска server восстановление не гарантируется;
+- проверить tier transition и equipment L2/L3 replacement: после завершения существует ровно один `OfficeBuildRoot` и одна active model на slot;
+- пройти весь catalog: старт 250000, total debit 205150, final Cash 44850;
+- **Start Server + 3 Players:** каждый видит replicated офисы, но purchase меняет только authoritative plot отправителя;
+- через test probe попытаться изменить чужой office/передать чужой plotId — сервер отклоняет, ownership maps и обе модели неизменны;
+- проверить все крайние tier anchors и maximum-content Global HQ: ни один `BasePart` не выходит за plot boundary, doorway/spawn/entrance path свободны;
+- в Script Profiler/MicroProfiler измерить initial Garage, full layout и 10 rebuilds; записать worst-case duration/Instance count и убедиться в отсутствии длительного роста memory.
+
+Для Stage 4 `rejoin` означает только same-server snapshot с TTL либо deterministic destroy/rebuild. Это не проверка DataStore и не доказательство cross-server persistence.
 
 ### Employees
 

@@ -30,18 +30,18 @@ function TestHarness.run(testCases: { TestCase })
 		local ok, cause = xpcall(testCase.run, tracebackError)
 
 		if ok then
-			print(`[Stage3Test] PASS {testCase.name}`)
+			print(`[Stage4Test] PASS {testCase.name}`)
 		else
 			table.insert(failures, `{testCase.name}: {cause}`)
-			warn(`[Stage3Test] FAIL {testCase.name}: {cause}`)
+			warn(`[Stage4Test] FAIL {testCase.name}: {cause}`)
 		end
 	end
 
 	if #failures > 0 then
-		error(`Stage 3 runtime tests failed ({#failures}):\n{table.concat(failures, "\n")}`)
+		error(`Stage 4 runtime tests failed ({#failures}):\n{table.concat(failures, "\n")}`)
 	end
 
-	print(`[Stage3Test] PASS all {#testCases} runtime tests`)
+	print(`[Stage4Test] PASS all {#testCases} runtime tests`)
 end
 
 return table.freeze(TestHarness)

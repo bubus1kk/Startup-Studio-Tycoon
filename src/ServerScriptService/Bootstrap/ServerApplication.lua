@@ -14,15 +14,27 @@ local PublicFeatureFlags = require(ReplicatedStorage.Shared.Config.PublicFeature
 local RemoteDefinitions = require(ReplicatedStorage.Shared.Remotes.RemoteDefinitions)
 
 local PlotConfigValidator = require(ServerScriptService.Config.PlotConfigValidator)
+local OfficeConfigValidator = require(ServerScriptService.Config.OfficeConfigValidator)
+local SessionCurrencyConfigValidator = require(ServerScriptService.Config.SessionCurrencyConfigValidator)
 local ServerConfigValidator = require(ServerScriptService.Config.ServerConfigValidator)
+local OfficeCatalog = require(ServerScriptService.Domain.OfficeCatalog)
+local OfficePlacement = require(ServerScriptService.Domain.OfficePlacement)
+local OfficeProgression = require(ServerScriptService.Domain.OfficeProgression)
 local RuntimeEnvironment = require(ServerScriptService.Infrastructure.RuntimeEnvironment)
 local ServerRemoteRegistry = require(ServerScriptService.Infrastructure.ServerRemoteRegistry)
 local ServiceRegistry = require(ServerScriptService.Infrastructure.ServiceRegistry)
 local PlayerSessionService = require(ServerScriptService.Services.PlayerSessionService)
+local OfficeBuildingService = require(ServerScriptService.Services.OfficeBuildingService)
+local OfficeSnapshotCache = require(ServerScriptService.Services.OfficeSnapshotCache)
 local PlotService = require(ServerScriptService.Services.PlotService)
-local OfficeShellBuilder = require(ServerScriptService.Systems.OfficeShellBuilder)
+local SessionCurrencyService = require(ServerScriptService.Services.SessionCurrencyService)
+local RequestRateLimiter = require(ServerScriptService.Security.RequestRateLimiter)
+local OfficeLayoutBuilder = require(ServerScriptService.Systems.OfficeLayoutBuilder)
+local PlotRuntimeBuilder = require(ServerScriptService.Systems.PlotRuntimeBuilder)
 
+local OfficeDefinitions = require(ServerStorage.Config.OfficeDefinitions)
 local PlotDefinitions = require(ServerStorage.Config.PlotDefinitions)
+local SessionCurrencyConfig = require(ServerStorage.Config.SessionCurrencyConfig)
 local ServerConfig = require(ServerStorage.Config.ServerConfig)
 
 type AppError = AppTypes.AppError
@@ -85,6 +97,27 @@ function ServerApplication.new(): Result<Application>
 			plotConfigResult.error.details
 		)
 	end
+	local officeConfigResult =
+		ConfigLoader.validateAndFreeze("OfficeDefinitions", OfficeDefinitions, OfficeConfigValidator.validate)
+	if not officeConfigResult.ok then
+		return AppTypes.failure(
+			officeConfigResult.error.code,
+			officeConfigResult.error.message,
+			officeConfigResult.error.details
+		)
+	end
+	local currencyConfigResult = ConfigLoader.validateAndFreeze(
+		"SessionCurrencyConfig",
+		SessionCurrencyConfig,
+		SessionCurrencyConfigValidator.validate
+	)
+	if not currencyConfigResult.ok then
+		return AppTypes.failure(
+			currencyConfigResult.error.code,
+			currencyConfigResult.error.message,
+			currencyConfigResult.error.details
+		)
+	end
 
 	local serverConfig = serverConfigResult.value
 	local environment = RuntimeEnvironment.detect(serverConfig.environment)
@@ -99,9 +132,28 @@ function ServerApplication.new(): Result<Application>
 	local remoteRegistry =
 		ServerRemoteRegistry.new(ReplicatedStorage, RemoteDefinitions.folderName, RemoteDefinitions.definitions, logger)
 
-	local plotService = PlotService.new(Workspace, plotConfigResult.value, OfficeShellBuilder.new(nil), logger)
-
-	local playerSessionService = PlayerSessionService.new(Players, logger, environment ~= "Production")
+	local plotService = PlotService.new(Workspace, plotConfigResult.value, PlotRuntimeBuilder.new(nil), logger)
+	local environmentKey = if environment == "Studio"
+		then "Development"
+		elseif environment == "Test" then "Test"
+		else "Production"
+	local currencyConfig = currencyConfigResult.value
+	local initialCash = currencyConfig.initialCashByEnvironment[environmentKey]
+	local currencyService = SessionCurrencyService.new(initialCash)
+	local progression = OfficeProgression.new(officeConfigResult.value)
+	local catalog = OfficeCatalog.new(officeConfigResult.value, progression)
+	local placement = OfficePlacement.new(progression)
+	local templates = ServerStorage:FindFirstChild("OfficeTemplates")
+	if templates == nil then
+		return AppTypes.failure("TemplateMissing", "ServerStorage.OfficeTemplates is missing", nil)
+	end
+	local officeBuilder = OfficeLayoutBuilder.new(templates, officeConfigResult.value, progression, placement, nil)
+	local limiter = RequestRateLimiter.new(os.clock)
+	local officeService =
+		OfficeBuildingService.new(officeConfigResult.value, progression, catalog, officeBuilder, limiter, logger)
+	local snapshotCache =
+		OfficeSnapshotCache.new(os.clock, currencyConfig.snapshotTtlSeconds, currencyConfig.snapshotCapacity)
+	local playerSessionService = PlayerSessionService.new(Players, logger, environment ~= "Production", snapshotCache)
 
 	local remoteRegistryRegistrationResult = registry:Register({
 		name = "ServerRemoteRegistry",
@@ -153,9 +205,57 @@ function ServerApplication.new(): Result<Application>
 		)
 	end
 
+	local currencyRegistrationResult = registry:Register({
+		name = "SessionCurrencyService",
+		dependencies = {},
+		value = currencyService,
+		hooks = {
+			Init = function(dependencies)
+				currencyService:Init(dependencies)
+			end,
+			Start = function()
+				currencyService:Start()
+			end,
+			Destroy = function()
+				currencyService:Destroy()
+			end,
+		},
+	})
+	if not currencyRegistrationResult.ok then
+		return AppTypes.failure(
+			currencyRegistrationResult.error.code,
+			currencyRegistrationResult.error.message,
+			currencyRegistrationResult.error.details
+		)
+	end
+
+	local officeRegistrationResult = registry:Register({
+		name = "OfficeBuildingService",
+		dependencies = { "PlotService", "SessionCurrencyService", "ServerRemoteRegistry" },
+		value = officeService,
+		hooks = {
+			Init = function(dependencies)
+				officeService:Init(dependencies)
+			end,
+			Start = function()
+				officeService:Start()
+			end,
+			Destroy = function()
+				officeService:Destroy()
+			end,
+		},
+	})
+	if not officeRegistrationResult.ok then
+		return AppTypes.failure(
+			officeRegistrationResult.error.code,
+			officeRegistrationResult.error.message,
+			officeRegistrationResult.error.details
+		)
+	end
+
 	local playerSessionRegistrationResult = registry:Register({
 		name = "PlayerSessionService",
-		dependencies = { "PlotService" },
+		dependencies = { "PlotService", "SessionCurrencyService", "OfficeBuildingService" },
 		value = playerSessionService,
 		hooks = {
 			Init = function(dependencies)

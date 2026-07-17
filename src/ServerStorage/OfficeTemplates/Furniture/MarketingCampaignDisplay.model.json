@@ -1,0 +1,29 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [1, 1, 1]
+      }
+    },
+    {
+      "name": "CampaignDisplayPanel",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Transparency": 0.15,
+        "Size": [1.0, 0.4, 0.75]
+      }
+    }
+  ]
+}

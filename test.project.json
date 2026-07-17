@@ -1,5 +1,5 @@
 {
-  "name": "StartupStudioTycoonStage3Tests",
+  "name": "StartupStudioTycoonStage4Tests",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
@@ -29,6 +29,9 @@
       "Systems": {
         "$path": "src/ServerScriptService/Systems"
       },
+      "Security": {
+        "$path": "src/ServerScriptService/Security"
+      },
       "Stage2Tests": {
         "$className": "Folder",
         "TestHarness": {
@@ -48,12 +51,18 @@
         },
         "ForeignOwnershipProbe": {
           "$path": "tests/ForeignOwnershipProbe.server.lua"
+        },
+        "OfficeSecurityProbe": {
+          "$path": "tests/OfficeSecurityProbe.server.lua"
         }
       }
     },
     "ServerStorage": {
       "Config": {
         "$path": "src/ServerStorage/Config"
+      },
+      "OfficeTemplates": {
+        "$path": "src/ServerStorage/OfficeTemplates"
       }
     },
     "StarterPlayer": {
@@ -64,11 +73,20 @@
         "Infrastructure": {
           "$path": "src/StarterPlayer/StarterPlayerScripts/Infrastructure"
         },
+        "Controllers": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/Controllers"
+        },
+        "UI": {
+          "$path": "src/StarterPlayer/StarterPlayerScripts/UI"
+        },
         "Stage2TestClient": {
           "$path": "tests/TestClient.client.lua"
         },
         "Stage3ForeignOwnershipProbe": {
           "$path": "tests/ForeignOwnershipProbe.client.lua"
+        },
+        "Stage4OfficeSecurityProbe": {
+          "$path": "tests/OfficeSecurityProbe.client.lua"
         }
       }
     },
