@@ -55,6 +55,39 @@
         "OfficeSecurityProbe": {
           "$path": "tests/OfficeSecurityProbe.server.lua"
         }
+      },
+      "Stage4Acceptance": {
+        "$className": "Folder",
+        "PluginRunnerUnderTest": {
+          "$className": "Folder",
+          "AcceptanceTypes": {
+            "$path": "tools/StageAcceptancePlugin/AcceptanceTypes.lua"
+          },
+          "AcceptanceRunner": {
+            "$path": "tools/StageAcceptancePlugin/AcceptanceRunner.lua"
+          },
+          "AcceptanceRunGuard": {
+            "$path": "tools/StageAcceptancePlugin/AcceptanceRunGuard.lua"
+          },
+          "AcceptanceRunnerSpec": {
+            "$path": "tests/acceptance/AcceptanceRunnerSpec.lua"
+          }
+        },
+        "AcceptanceTestUtils": {
+          "$path": "tests/acceptance/AcceptanceTestUtils.lua"
+        },
+        "Stage4SoloAcceptance": {
+          "$path": "tests/acceptance/Stage4SoloAcceptance.lua"
+        },
+        "Stage4MultiplayerAcceptance": {
+          "$path": "tests/acceptance/Stage4MultiplayerAcceptance.lua"
+        },
+        "Stage4PerformanceAcceptance": {
+          "$path": "tests/acceptance/Stage4PerformanceAcceptance.lua"
+        },
+        "Stage4AcceptanceRouter": {
+          "$path": "tests/acceptance/Stage4AcceptanceRouter.server.lua"
+        }
       }
     },
     "ServerStorage": {
@@ -90,6 +123,9 @@
         },
         "ClientSpecs": {
           "$path": "tests/client"
+        },
+        "Stage4AcceptanceClient": {
+          "$path": "tests/acceptance/Stage4ClientAcceptance.client.lua"
         }
       }
     },

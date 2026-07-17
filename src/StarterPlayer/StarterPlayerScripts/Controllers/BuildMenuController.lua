@@ -111,6 +111,29 @@ function BuildMenuController._navigate(self: Controller, categoryId: OfficeCateg
 	self:Refresh()
 end
 
+function BuildMenuController.ToggleMenu(self: Controller)
+	local view = self._view
+	if view == nil or self._isDestroyed or self._player:GetAttribute("OfficeSessionReady") ~= true then
+		return
+	end
+	view:SetOpen(not view:IsOpen())
+	if view:IsOpen() then
+		self:Refresh()
+	end
+end
+
+function BuildMenuController.PreviousPage(self: Controller)
+	if self._page > 1 then
+		self:_navigate(self._categoryId, self._page - 1)
+	end
+end
+
+function BuildMenuController.NextPage(self: Controller)
+	if self._page < self._pageCount then
+		self:_navigate(self._categoryId, self._page + 1)
+	end
+end
+
 function BuildMenuController.Refresh(self: Controller)
 	local view = self._view
 	if view == nil or self._isDestroyed or not self._player:GetAttribute("OfficeSessionReady") then
@@ -250,12 +273,7 @@ function BuildMenuController.Start(self: Controller)
 	table.insert(
 		self._connections,
 		view:GetBuildButton().Activated:Connect(function()
-			if self._player:GetAttribute("OfficeSessionReady") == true then
-				view:SetOpen(not view:IsOpen())
-				if view:IsOpen() then
-					self:Refresh()
-				end
-			end
+			self:ToggleMenu()
 		end)
 	)
 	table.insert(
@@ -267,17 +285,13 @@ function BuildMenuController.Start(self: Controller)
 	table.insert(
 		self._connections,
 		view:GetPreviousButton().Activated:Connect(function()
-			if self._page > 1 then
-				self:_navigate(self._categoryId, self._page - 1)
-			end
+			self:PreviousPage()
 		end)
 	)
 	table.insert(
 		self._connections,
 		view:GetNextButton().Activated:Connect(function()
-			if self._page < self._pageCount then
-				self:_navigate(self._categoryId, self._page + 1)
-			end
+			self:NextPage()
 		end)
 	)
 	for category, categoryButton in view:GetCategoryButtons() do
@@ -291,15 +305,8 @@ function BuildMenuController.Start(self: Controller)
 	table.insert(
 		self._connections,
 		UserInputService.InputBegan:Connect(function(input: InputObject, processed: boolean)
-			if
-				not processed
-				and input.KeyCode == Enum.KeyCode.B
-				and self._player:GetAttribute("OfficeSessionReady") == true
-			then
-				view:SetOpen(not view:IsOpen())
-				if view:IsOpen() then
-					self:Refresh()
-				end
+			if not processed and input.KeyCode == Enum.KeyCode.B then
+				self:ToggleMenu()
 			end
 		end)
 	)

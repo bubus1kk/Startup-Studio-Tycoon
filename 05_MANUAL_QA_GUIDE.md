@@ -128,6 +128,7 @@ Screenshot, video, Output, Developer Console, profiler.
 
 ### Building
 
+- перед ручными сценариями собрать и установить локальный runner по `docs/STAGE_4_AUTOMATED_ACCEPTANCE.md`, открыть Stage 4 test place и сохранить полный результат `Stage 4 Full` из dock widget/Output;
 - **Solo:** HUD Build button появляется один раз, `B` открывает то же меню, категории/цены/locked state корректны; Garage уже `Purchased`;
 - Игрок проходит от SpawnLocation до Garage без прыжка, затем после полного progression проходит тем же способом до Global HQ;
 - купить Development Room, её equipment/furniture, оба upgrade level и проверить `Available → Purchased`, `L2 → Available`, `L3 → MaxLevel`;

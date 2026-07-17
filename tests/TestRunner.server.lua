@@ -3,6 +3,47 @@
 local TestHarness = require(script.Parent.TestHarness)
 
 local StudioTestService = game:GetService("StudioTestService")
+local testArgs = StudioTestService:GetTestArgs()
+
+-- The acceptance router owns structured Stage 4 suite runs. Preserve the
+-- legacy no-args runtime behavior and the explicit Stage4RuntimeGate string.
+if typeof(testArgs) == "table" and testArgs.stage == 4 and typeof(testArgs.suite) == "string" then
+	return
+end
+
+local runtimeGateEnded = false
+local function endRuntimeGate(result: { [string]: unknown })
+	if runtimeGateEnded then
+		return
+	end
+	runtimeGateEnded = true
+	StudioTestService:EndTest(result)
+end
+
+local runtimeWatchdog: thread? = nil
+if testArgs == "Stage4RuntimeGate" then
+	runtimeWatchdog = task.delay(90, function()
+		endRuntimeGate({
+			ok = false,
+			suite = "Stage4Runtime",
+			total = 1,
+			passed = 0,
+			failed = 1,
+			skipped = 0,
+			durationSeconds = 90,
+			failures = {
+				{
+					test = "runtime watchdog",
+					message = "Runtime suite exceeded the 90 second watchdog timeout",
+				},
+			},
+			metrics = {
+				watchdogExpired = true,
+				timeoutSeconds = 90,
+			},
+		})
+	end)
+end
 
 local ClientDependencyResolverSpec = require(script.Parent.Unit.ClientDependencyResolverSpec)
 local ConfigAndPayloadSpec = require(script.Parent.Unit.ConfigAndPayloadSpec)
@@ -19,6 +60,7 @@ local OfficeSnapshotCacheSpec = require(script.Parent.Unit.OfficeSnapshotCacheSp
 local OfficeTemplateContentSpec = require(script.Parent.Unit.OfficeTemplateContentSpec)
 local RequestRateLimiterSpec = require(script.Parent.Unit.RequestRateLimiterSpec)
 local SessionCurrencyServiceSpec = require(script.Parent.Unit.SessionCurrencyServiceSpec)
+local AcceptanceRunnerSpec = require(script.Parent.Parent.Stage4Acceptance.PluginRunnerUnderTest.AcceptanceRunnerSpec)
 
 local PlotServiceIntegrationSpec = require(script.Parent.Integration.PlotServiceIntegrationSpec)
 local ProductionPlotRuntimeSpec = require(script.Parent.Integration.ProductionPlotRuntimeSpec)
@@ -37,6 +79,10 @@ local OfficeUpgradeSpec = require(script.Parent.Integration.OfficeUpgradeSpec)
 local ProductionOfficeRuntimeSpec = require(script.Parent.Integration.ProductionOfficeRuntimeSpec)
 
 local testCases: { TestHarness.TestCase } = {}
+
+for _, testCase in AcceptanceRunnerSpec.tests() do
+	table.insert(testCases, testCase)
+end
 
 for _, testCase in ClientDependencyResolverSpec.tests() do
 	table.insert(testCases, testCase)
@@ -110,16 +156,49 @@ do
 	end
 end
 
+local report: TestHarness.Report? = nil
 local ok, cause = xpcall(function()
-	TestHarness.run(testCases)
+	report = TestHarness.runAndCollect(testCases)
+	if (report :: TestHarness.Report).failed > 0 then
+		error(`Stage 4 runtime tests failed ({(report :: TestHarness.Report).failed})`)
+	end
 end, function(errorValue: unknown): string
 	return debug.traceback(tostring(errorValue), 2)
 end)
 
-if StudioTestService:GetTestArgs() == "Stage4RuntimeGate" then
-	StudioTestService:EndTest({
-		ok = ok,
-		cause = if ok then "none" else cause,
+if testArgs == "Stage4RuntimeGate" then
+	if runtimeWatchdog ~= nil then
+		pcall(task.cancel, runtimeWatchdog)
+	end
+	local finalReport = report
+	if finalReport == nil then
+		finalReport = {
+			total = 1,
+			passed = 0,
+			failed = 1,
+			skipped = 0,
+			durationSeconds = 0,
+			failures = {
+				{
+					test = "runtime suite execution",
+					message = cause,
+					traceback = cause,
+				},
+			},
+		}
+	end
+	endRuntimeGate({
+		ok = ok and finalReport.failed == 0,
+		suite = "Stage4Runtime",
+		total = finalReport.total,
+		passed = finalReport.passed,
+		failed = finalReport.failed,
+		skipped = finalReport.skipped,
+		durationSeconds = finalReport.durationSeconds,
+		failures = finalReport.failures,
+		metrics = {
+			runtimeTestsExecuted = finalReport.total,
+		},
 	})
 end
 

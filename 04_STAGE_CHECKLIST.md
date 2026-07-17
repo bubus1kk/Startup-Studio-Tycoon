@@ -100,6 +100,8 @@
 - [ ] snapshot TTL/capacity используют injected monotonic clock и lazy eviction;
 - [ ] Solo и Start Server + 3 Players manual QA выполнены;
 - [ ] maximum-content generation и rebuild performance проверены в Studio profiler;
+- [ ] локальный Stage Acceptance Plugin собран, вручную установлен и `Stage 4 Full` вернул структурированный результат через `StudioTestService:EndTest`;
+- [ ] runtime result содержит минимум 57 реально выполненных тестов, а не фиксированный PASS count;
 - [ ] production/test remotes, probes и fixtures изолированы;
 - [ ] `scripts/Test-Stage1.ps1` … `scripts/Test-Stage4.ps1`, lint и оба Rojo build проходят.
 

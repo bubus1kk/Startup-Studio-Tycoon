@@ -1,6 +1,7 @@
 --!strict
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local BuildMenuController = require(script.Parent.Parent.Controllers.BuildMenuController)
 local BuildMenuView = require(script.Parent.Parent.UI.BuildMenuView)
@@ -22,6 +23,7 @@ type FakeViewState = {
 	renderCount: number,
 	lastCategory: string?,
 	lastPage: number?,
+	isOpen: boolean,
 	destroyed: boolean,
 	callsAfterDestroy: number,
 }
@@ -35,13 +37,57 @@ local function assertTrue(value: boolean, message: string)
 end
 
 local function waitUntil(predicate: () -> boolean, message: string)
-	local deadline = os.clock() + 3
-	while not predicate() do
-		if os.clock() >= deadline then
-			error(message, 2)
-		end
-		task.wait()
+	if predicate() then
+		return
 	end
+	local completed = Instance.new("BindableEvent")
+	local resolved = false
+	local success = false
+	local function finish(ok: boolean)
+		if resolved then
+			return
+		end
+		resolved = true
+		success = ok
+		completed:Fire()
+	end
+	local connection = RunService.Heartbeat:Connect(function()
+		if predicate() then
+			finish(true)
+		end
+	end)
+	local timeoutThread = task.delay(3, function()
+		finish(false)
+	end)
+	completed.Event:Wait()
+	connection:Disconnect()
+	pcall(task.cancel, timeoutThread)
+	completed:Destroy()
+	if not success then
+		error(message, 2)
+	end
+end
+
+local function waitForGate(gate: BindableEvent, message: string)
+	local fired = false
+	local connection = gate.Event:Connect(function()
+		fired = true
+	end)
+	waitUntil(function(): boolean
+		return fired
+	end, message)
+	connection:Disconnect()
+end
+
+local function waitForHeartbeat(message: string)
+	local heartbeat = false
+	local connection = RunService.Heartbeat:Connect(function()
+		heartbeat = true
+	end)
+	waitUntil(function(): boolean
+		return heartbeat
+	end, message)
+	connection:Disconnect()
 end
 
 local function newFakeView(): (View, FakeViewState)
@@ -50,6 +96,7 @@ local function newFakeView(): (View, FakeViewState)
 		renderCount = 0,
 		lastCategory = nil,
 		lastPage = nil,
+		isOpen = false,
 		destroyed = false,
 		callsAfterDestroy = 0,
 	}
@@ -74,6 +121,13 @@ local function newFakeView(): (View, FakeViewState)
 		touched()
 		state.lastPage = page
 	end
+	function object:SetOpen(isOpen: boolean)
+		touched()
+		state.isOpen = isOpen
+	end
+	function object:IsOpen(): boolean
+		return state.isOpen
+	end
 	function object:RenderItems(_items: { BuildMenuView.CatalogItem }): { [string]: TextButton }
 		touched()
 		state.renderCount += 1
@@ -84,6 +138,54 @@ local function newFakeView(): (View, FakeViewState)
 	end
 	local view = (object :: unknown) :: View
 	return view, state
+end
+
+local function controllerToggleAndPaginationTest(player: Player)
+	local view, state = newFakeView()
+	local catalogRemote = Instance.new("RemoteFunction")
+	catalogRemote.Name = "RequestOfficeCatalog"
+	local invoke: InvokeRemote = function(_remote, payload): unknown
+		local request = payload :: OfficeCatalogRequest
+		return {
+			ok = true,
+			requestId = request.requestId,
+			categoryId = request.categoryId,
+			page = request.page,
+			pageCount = 2,
+			totalItems = 9,
+			revision = 1,
+			currentTierId = "tier_garage",
+			cash = 250000,
+			items = { { itemId = `{request.categoryId}-{request.page}` } },
+		}
+	end
+	local controller = BuildMenuController.new(player, {
+		view = view,
+		remoteResolver = function(name: string): RemoteFunction?
+			return if name == "RequestOfficeCatalog" then catalogRemote else nil
+		end,
+		invokeRemote = invoke,
+	})
+
+	controller:_navigate("Rooms", 2)
+	waitUntil(function(): boolean
+		return state.lastCategory == "Rooms" and state.lastPage == 2
+	end, "Controller did not render page 2")
+	controller:PreviousPage()
+	waitUntil(function(): boolean
+		return state.lastPage == 1
+	end, "Previous did not navigate to page 1")
+	controller:NextPage()
+	waitUntil(function(): boolean
+		return state.lastPage == 2
+	end, "Next did not navigate to page 2")
+	controller:ToggleMenu()
+	assertTrue(state.isOpen, "Controller-level build toggle did not open the menu")
+	controller:ToggleMenu()
+	assertTrue(not state.isOpen, "Controller-level build toggle did not close the menu")
+	controller:Destroy()
+	catalogRemote:Destroy()
+	print("[Stage4Test] PASS controller toggle and Next/Previous pagination")
 end
 
 local function hasStatus(state: FakeViewState, expected: string): boolean
@@ -150,7 +252,7 @@ local function outOfOrderCatalogResponseTest(player: Player)
 		local index = requestCount
 		local gate = Instance.new("BindableEvent")
 		gates[index] = gate
-		gate.Event:Wait()
+		waitForGate(gate, `Catalog gate {index} timed out`)
 		return {
 			ok = true,
 			requestId = request.requestId,
@@ -185,7 +287,7 @@ local function outOfOrderCatalogResponseTest(player: Player)
 		return state.lastCategory == "Rooms" and state.lastPage == 2 and state.renderCount == 1
 	end, "Newer catalog response did not render")
 	gates[1]:Fire()
-	task.wait()
+	waitForHeartbeat("Stale catalog callback did not get a scheduler turn")
 	assertTrue(state.renderCount == 1, "Stale catalog response redrew a newer category/page")
 	assertTrue(state.lastCategory == "Rooms" and state.lastPage == 2, "Stale response changed catalog location")
 	controller:Destroy()
@@ -205,7 +307,7 @@ local function destroyDuringPendingRequestTest(player: Player)
 	local invoke: InvokeRemote = function(_remote, payload): unknown
 		local request = payload :: OfficePurchaseRequest
 		started = true
-		gate.Event:Wait()
+		waitForGate(gate, "Pending purchase gate timed out")
 		return {
 			ok = true,
 			requestId = request.requestId,
@@ -229,7 +331,7 @@ local function destroyDuringPendingRequestTest(player: Player)
 	end, "Pending purchase did not start")
 	controller:Destroy()
 	gate:Fire()
-	task.wait()
+	waitForHeartbeat("Destroyed purchase callback did not get a scheduler turn")
 	assertTrue(state.destroyed, "Destroy did not release build-menu view")
 	assertTrue(state.callsAfterDestroy == 0, "Pending request touched a destroyed build-menu view")
 	gate:Destroy()
@@ -244,6 +346,7 @@ function BuildMenuControllerClientSpec.run()
 		return
 	end
 	player:SetAttribute("OfficeSessionReady", true)
+	controllerToggleAndPaginationTest(player)
 	purchaseExceptionCleanupAndRetryTest(player)
 	outOfOrderCatalogResponseTest(player)
 	destroyDuringPendingRequestTest(player)

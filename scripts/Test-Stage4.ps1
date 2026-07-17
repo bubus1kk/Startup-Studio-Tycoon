@@ -80,7 +80,22 @@ $requiredTestSupport = @(
 	"tests/serverFixtures/FailureOfficeTemplates.lua",
 	"tests/OfficeSecurityProbe.server.lua",
 	"tests/OfficeSecurityProbe.client.lua",
-	"tests/client/BuildMenuControllerClientSpec.lua"
+	"tests/client/BuildMenuControllerClientSpec.lua",
+	"tests/acceptance/AcceptanceTestUtils.lua",
+	"tests/acceptance/AcceptanceRunnerSpec.lua",
+	"tests/acceptance/Stage4AcceptanceRouter.server.lua",
+	"tests/acceptance/Stage4SoloAcceptance.lua",
+	"tests/acceptance/Stage4MultiplayerAcceptance.lua",
+	"tests/acceptance/Stage4PerformanceAcceptance.lua",
+	"tests/acceptance/Stage4ClientAcceptance.client.lua"
+)
+
+$pluginFiles = @(
+	"tools/StageAcceptancePlugin/StageAcceptancePlugin.server.lua",
+	"tools/StageAcceptancePlugin/AcceptanceRunner.lua",
+	"tools/StageAcceptancePlugin/AcceptanceRunGuard.lua",
+	"tools/StageAcceptancePlugin/AcceptanceReportView.lua",
+	"tools/StageAcceptancePlugin/AcceptanceTypes.lua"
 )
 
 foreach ($relativePath in $productionFiles) {
@@ -95,8 +110,38 @@ foreach ($spec in $runtimeSpecs) {
 	$relativePath = "tests/integration/$spec.lua"
 	Assert-Stage4 -Condition (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath) -PathType Leaf) -Message "Runtime spec missing: $spec"
 }
+$testRunner = Read-ProjectFile "tests/TestRunner.server.lua"
+foreach ($spec in @("OfficeEntranceApproachSpec", "OfficeFullLayoutPerformanceSpec", "OfficeRejoinSpec", "OfficeMultiplayerSpec", "OfficeRemoteSpec", "ProductionOfficeRuntimeSpec")) {
+	Assert-Stage4 -Condition ($testRunner.Contains($spec)) -Message "Required runtime spec is not routed by TestRunner: $spec"
+}
+foreach ($field in @('suite = "Stage4Runtime"', "total = finalReport.total", "runtimeTestsExecuted = finalReport.total")) {
+	Assert-Stage4 -Condition ($testRunner.Contains($field)) -Message "Structured runtime report contract missing: $field"
+}
+Assert-Stage4 -Condition ($testRunner.Contains("AcceptanceRunnerSpec")) -Message "Plugin runner fake-executor unit tests are not routed by TestRunner"
+$acceptanceRunner = Read-ProjectFile "tools/StageAcceptancePlugin/AcceptanceRunner.lua"
+foreach ($contract in @(
+	"timeoutSeconds = 90", "timeoutSeconds = 120", "timeoutSeconds = 180", "timeoutSeconds = 240",
+	"FULL_TIMEOUT_SECONDS = 480", "WaitForEditMode", "Full orchestration timeout", "resultType="
+)) {
+	Assert-Stage4 -Condition ($acceptanceRunner.Contains($contract)) -Message "Acceptance runner lifecycle contract missing: $contract"
+}
+$acceptanceRouter = Read-ProjectFile "tests/acceptance/Stage4AcceptanceRouter.server.lua"
+foreach ($contract in @("finalizeOnce", "StudioTestService:EndTest(result)", "watchdogExpired = true")) {
+	Assert-Stage4 -Condition ($acceptanceRouter.Contains($contract)) -Message "Acceptance router finalization contract missing: $contract"
+}
+$performanceAcceptance = Read-ProjectFile "tests/acceptance/Stage4PerformanceAcceptance.lua"
+Assert-Stage4 -Condition ($performanceAcceptance.Contains("#players - 1")) -Message "Performance cleanup must preserve the last client for server-side EndTest"
+$testHarness = Read-ProjectFile "tests/TestHarness.lua"
+Assert-Stage4 -Condition ($testHarness.Contains("runAndCollect")) -Message "Runtime harness does not collect real per-test results"
 foreach ($relativePath in $requiredTestSupport) {
 	Assert-Stage4 -Condition (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath) -PathType Leaf) -Message "Stage 4 fixture/probe missing: $relativePath"
+}
+foreach ($relativePath in $pluginFiles) {
+	Assert-Stage4 -Condition (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath) -PathType Leaf) -Message "Stage acceptance plugin file missing: $relativePath"
+	Assert-Stage4 -Condition ((Read-ProjectFile $relativePath).StartsWith("--!strict")) -Message "Strict mode is missing: $relativePath"
+}
+foreach ($relativePath in @("stage-acceptance-plugin.project.json", "scripts/Build-StageAcceptancePlugin.ps1", "docs/STAGE_4_AUTOMATED_ACCEPTANCE.md")) {
+	Assert-Stage4 -Condition (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath) -PathType Leaf) -Message "Automated acceptance workflow file missing: $relativePath"
 }
 
 $officeConfig = Read-ProjectFile "src/ServerStorage/Config/OfficeDefinitions.lua"
@@ -267,32 +312,63 @@ Assert-Stage4 -Condition ($ci.Contains("StartupStudioTycoonStage4Tests.rbxl")) -
 
 $productionProjectText = Read-ProjectFile "default.project.json"
 $testProjectText = Read-ProjectFile "test.project.json"
+$pluginProjectText = Read-ProjectFile "stage-acceptance-plugin.project.json"
 $testProject = $testProjectText | ConvertFrom-Json
 Assert-Stage4 -Condition (-not $productionProjectText.Contains("tests/")) -Message "Production project maps test content"
+Assert-Stage4 -Condition (-not $productionProjectText.Contains("tools/")) -Message "Production project maps tools content"
+Assert-Stage4 -Condition (-not $productionProjectText.Contains("plugin")) -Message "Production project maps plugin content"
 Assert-Stage4 -Condition ($testProject.name -eq "StartupStudioTycoonStage4Tests") -Message "Stage 4 test project name is incorrect"
 Assert-Stage4 -Condition ($testProject.tree.ServerStorage.OfficeTemplates.'$path' -eq "src/ServerStorage/OfficeTemplates") -Message "Test project does not map server-only office templates"
+Assert-Stage4 -Condition ($testProject.tree.ServerScriptService.Stage4Acceptance.Stage4AcceptanceRouter.'$path' -eq "tests/acceptance/Stage4AcceptanceRouter.server.lua") -Message "Acceptance server router is not mapped into the test project"
+Assert-Stage4 -Condition ($testProject.tree.ServerScriptService.Stage4Acceptance.PluginRunnerUnderTest.AcceptanceRunner.'$path' -eq "tools/StageAcceptancePlugin/AcceptanceRunner.lua") -Message "Pure plugin runner module is not mapped for fake-executor runtime tests"
+Assert-Stage4 -Condition ($testProject.tree.ServerScriptService.Stage4Acceptance.PluginRunnerUnderTest.AcceptanceRunGuard.'$path' -eq "tools/StageAcceptancePlugin/AcceptanceRunGuard.lua") -Message "Plugin run guard is not mapped for runtime tests"
+Assert-Stage4 -Condition ($testProject.tree.ServerScriptService.Stage4Acceptance.PluginRunnerUnderTest.AcceptanceRunnerSpec.'$path' -eq "tests/acceptance/AcceptanceRunnerSpec.lua") -Message "Plugin runner spec is not mapped into the test project"
+Assert-Stage4 -Condition ($testProject.tree.StarterPlayer.StarterPlayerScripts.Stage4AcceptanceClient.'$path' -eq "tests/acceptance/Stage4ClientAcceptance.client.lua") -Message "Acceptance client runner is not mapped into the test project"
+Assert-Stage4 -Condition (-not $testProjectText.Contains("StageAcceptancePlugin.server.lua")) -Message "Plugin entry script leaked into the runtime test place"
+Assert-Stage4 -Condition (-not $testProjectText.Contains("AcceptanceReportView.lua")) -Message "Plugin UI leaked into the runtime test place"
+Assert-Stage4 -Condition ($pluginProjectText.Contains("tools/StageAcceptancePlugin")) -Message "Plugin project does not map the local plugin sources"
+Assert-Stage4 -Condition (-not $pluginProjectText.Contains('"src/')) -Message "Plugin project maps production sources"
+Assert-Stage4 -Condition (-not $pluginProjectText.Contains('"tests/')) -Message "Plugin project maps test-place sources"
 Assert-Stage4 -Condition (-not $productionProjectText.Contains("OfficeSecurityProbe")) -Message "Security probe leaked into production project"
-foreach ($testOnlyName in @("TestSupport", "Stage2Tests", "ForeignOwnershipProbe", "OfficeSecurityProbe")) {
+foreach ($testOnlyName in @("TestSupport", "Stage2Tests", "ForeignOwnershipProbe", "OfficeSecurityProbe", "Stage4Acceptance")) {
 	Assert-Stage4 -Condition (-not $productionProjectText.Contains($testOnlyName)) -Message "Test-only mapping leaked into production project: $testOnlyName"
 }
 
 $productionSourcemapPath = [System.IO.Path]::GetTempFileName()
 $testSourcemapPath = [System.IO.Path]::GetTempFileName()
+$pluginSourcemapPath = [System.IO.Path]::GetTempFileName()
+$pluginBuildTempBase = [System.IO.Path]::GetTempFileName()
+$pluginBuildPath = [System.IO.Path]::ChangeExtension($pluginBuildTempBase, ".rbxm")
 try {
 	& rojo sourcemap (Join-Path $projectRoot "default.project.json") --output $productionSourcemapPath | Out-Host
 	if ($LASTEXITCODE -ne 0) { throw "Production sourcemap failed with exit code $LASTEXITCODE" }
 	& rojo sourcemap (Join-Path $projectRoot "test.project.json") --output $testSourcemapPath | Out-Host
 	if ($LASTEXITCODE -ne 0) { throw "Test sourcemap failed with exit code $LASTEXITCODE" }
+	& rojo sourcemap (Join-Path $projectRoot "stage-acceptance-plugin.project.json") --output $pluginSourcemapPath | Out-Host
+	if ($LASTEXITCODE -ne 0) { throw "Plugin sourcemap failed with exit code $LASTEXITCODE" }
+	& rojo build (Join-Path $projectRoot "stage-acceptance-plugin.project.json") -o $pluginBuildPath | Out-Host
+	if ($LASTEXITCODE -ne 0) { throw "Plugin build failed with exit code $LASTEXITCODE" }
 	$productionMap = Get-Content -Raw -LiteralPath $productionSourcemapPath | ConvertFrom-Json
 	$testMap = Get-Content -Raw -LiteralPath $testSourcemapPath | ConvertFrom-Json
+	$pluginMap = Get-Content -Raw -LiteralPath $pluginSourcemapPath | ConvertFrom-Json
 	$null = Assert-SourcemapPath -Root $productionMap -Segments @("ServerScriptService", "Services", "OfficeBuildingService") -Description "Production OfficeBuildingService"
 	$null = Assert-SourcemapPath -Root $productionMap -Segments @("ServerStorage", "Config", "OfficeDefinitions") -Description "Production office configuration"
 	$null = Assert-SourcemapPath -Root $testMap -Segments @("ServerScriptService", "Stage2Tests", "OfficeSecurityProbe") -Description "Test-only office security server probe"
+	$null = Assert-SourcemapPath -Root $testMap -Segments @("ServerScriptService", "Stage4Acceptance", "Stage4AcceptanceRouter") -Description "Stage 4 acceptance server router"
+	$null = Assert-SourcemapPath -Root $testMap -Segments @("StarterPlayer", "StarterPlayerScripts", "Stage4AcceptanceClient") -Description "Stage 4 acceptance client runner"
+	$null = Assert-SourcemapPath -Root $pluginMap -Segments @("StageAcceptancePlugin") -Description "Local plugin entry point"
 	Assert-Stage4 -Condition (-not (Get-Content -Raw -LiteralPath $productionSourcemapPath).Contains("OfficeSecurityProbe")) -Message "Test-only office probe leaked into production sourcemap"
+	Assert-Stage4 -Condition (-not (Get-Content -Raw -LiteralPath $productionSourcemapPath).Contains("Stage4Acceptance")) -Message "Acceptance runner leaked into production sourcemap"
+	Assert-Stage4 -Condition (-not (Get-Content -Raw -LiteralPath $testSourcemapPath).Contains('"name":"StageAcceptancePlugin"')) -Message "Plugin entry leaked into test sourcemap"
+	Assert-Stage4 -Condition (-not (Get-Content -Raw -LiteralPath $testSourcemapPath).Contains('"name":"AcceptanceReportView"')) -Message "Plugin UI leaked into test sourcemap"
+	Assert-Stage4 -Condition ((Get-Item -LiteralPath $pluginBuildPath).Length -gt 0) -Message "Plugin build output is empty"
 }
 finally {
 	Remove-Item -LiteralPath $productionSourcemapPath -Force -ErrorAction SilentlyContinue
 	Remove-Item -LiteralPath $testSourcemapPath -Force -ErrorAction SilentlyContinue
+	Remove-Item -LiteralPath $pluginSourcemapPath -Force -ErrorAction SilentlyContinue
+	Remove-Item -LiteralPath $pluginBuildPath -Force -ErrorAction SilentlyContinue
+	Remove-Item -LiteralPath $pluginBuildTempBase -Force -ErrorAction SilentlyContinue
 }
 
 Write-Host "Stage 4 structural tests passed ($script:assertionCount assertions)."
