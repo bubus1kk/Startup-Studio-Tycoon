@@ -1,0 +1,231 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "AdvancedResearchBench",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.1,
+          0.13,
+          0.18
+        ],
+        "Size": [
+          5.8,
+          2.1,
+          3.6
+        ],
+        "CFrame": [
+          0,
+          1.05,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "PredictiveDataWall",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.18,
+          0.78,
+          0.85
+        ],
+        "Size": [
+          4.7,
+          1.9,
+          0.25
+        ],
+        "CFrame": [
+          0,
+          3.1,
+          -1.15,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "ComputeCoreLeft",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Glass",
+        "Color": [
+          0.62,
+          0.34,
+          0.82
+        ],
+        "Size": [
+          1.1,
+          2.8,
+          1.4
+        ],
+        "CFrame": [
+          -2.2,
+          2.6,
+          0.2,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "ComputeCoreRight",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Glass",
+        "Color": [
+          0.2,
+          0.7,
+          0.5
+        ],
+        "Size": [
+          1.1,
+          2.8,
+          1.4
+        ],
+        "CFrame": [
+          2.2,
+          2.6,
+          0.2,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "ContainmentField",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.96,
+          0.55,
+          0.2
+        ],
+        "Size": [
+          3.8,
+          0.4,
+          1.1
+        ],
+        "CFrame": [
+          0,
+          2.35,
+          0.8,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "DiscoveryBeacon",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.93,
+          0.95,
+          0.98
+        ],
+        "Size": [
+          1,
+          1,
+          1
+        ],
+        "CFrame": [
+          0,
+          4.4,
+          -0.3,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "CampaignDesk",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Wood",
+        "Color": [
+          0.45,
+          0.25,
+          0.12
+        ],
+        "Size": [
+          5,
+          1.7,
+          3.2
+        ],
+        "CFrame": [
+          0,
+          0.85,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "ReachDisplay",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.96,
+          0.55,
+          0.2
+        ],
+        "Size": [
+          2.8,
+          1.6,
+          0.2
+        ],
+        "CFrame": [
+          0,
+          2.5,
+          -1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "MediaDeck",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.1,
+          0.13,
+          0.18
+        ],
+        "Size": [
+          1.4,
+          0.4,
+          1.4
+        ],
+        "CFrame": [
+          -1.8,
+          1.9,
+          0.5,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "LaunchButton",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.88,
+          0.28,
+          0.25
+        ],
+        "Size": [
+          0.8,
+          0.3,
+          0.8
+        ],
+        "CFrame": [
+          1.8,
+          1.9,
+          0.5,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "CollaborationTable",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "SmoothPlastic",
+        "Color": [
+          0.78,
+          0.84,
+          0.9
+        ],
+        "Size": [
+          5.6,
+          1.7,
+          3.5
+        ],
+        "CFrame": [
+          0,
+          0.85,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "WideCallDisplay",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.2,
+          0.5,
+          0.86
+        ],
+        "Size": [
+          4,
+          1.7,
+          0.22
+        ],
+        "CFrame": [
+          0,
+          2.7,
+          -1.15,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "SpatialSpeakerLeft",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.1,
+          0.13,
+          0.18
+        ],
+        "Size": [
+          0.7,
+          2,
+          0.7
+        ],
+        "CFrame": [
+          -2.2,
+          2.4,
+          -0.3,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "SpatialSpeakerRight",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.1,
+          0.13,
+          0.18
+        ],
+        "Size": [
+          0.7,
+          2,
+          0.7
+        ],
+        "CFrame": [
+          2.2,
+          2.4,
+          -0.3,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "AgendaConsole",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Glass",
+        "Color": [
+          0.18,
+          0.78,
+          0.85
+        ],
+        "Size": [
+          2.5,
+          0.35,
+          1.2
+        ],
+        "CFrame": [
+          0,
+          1.95,
+          0.7,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ]
+}

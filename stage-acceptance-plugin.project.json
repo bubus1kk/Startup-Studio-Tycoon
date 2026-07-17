@@ -1,0 +1,21 @@
+{
+  "name": "StageAcceptancePlugin",
+  "tree": {
+    "$className": "Model",
+    "StageAcceptancePlugin": {
+      "$path": "tools/StageAcceptancePlugin/StageAcceptancePlugin.server.lua"
+    },
+    "AcceptanceRunner": {
+      "$path": "tools/StageAcceptancePlugin/AcceptanceRunner.lua"
+    },
+    "AcceptanceRunGuard": {
+      "$path": "tools/StageAcceptancePlugin/AcceptanceRunGuard.lua"
+    },
+    "AcceptanceReportView": {
+      "$path": "tools/StageAcceptancePlugin/AcceptanceReportView.lua"
+    },
+    "AcceptanceTypes": {
+      "$path": "tools/StageAcceptancePlugin/AcceptanceTypes.lua"
+    }
+  }
+}

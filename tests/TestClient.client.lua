@@ -1,6 +1,12 @@
 --!strict
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StudioTestService = game:GetService("StudioTestService")
+
+local testArgs = StudioTestService:GetTestArgs()
+if typeof(testArgs) == "table" and testArgs.stage == 4 and typeof(testArgs.suite) == "string" then
+	return
+end
 
 local CLIENT_BOOTSTRAP_TIMEOUT_SECONDS = 10
 
@@ -63,6 +69,13 @@ if bootstrapState ~= "Ready" then
 end
 
 print("[Stage2Test] PASS production client emitted client_bootstrap_ready")
+
+local clientSpecs = playerScripts:WaitForChild("ClientSpecs", CLIENT_BOOTSTRAP_TIMEOUT_SECONDS)
+if clientSpecs == nil or not clientSpecs:IsA("Folder") then
+	error("Stage 4 client specs were not copied to PlayerScripts")
+end
+local buildMenuControllerClientSpec = require(clientSpecs.BuildMenuControllerClientSpec)
+buildMenuControllerClientSpec.run()
 
 local folder = ReplicatedStorage:WaitForChild("TestRemotes", 10)
 if folder == nil or not folder:IsA("Folder") then

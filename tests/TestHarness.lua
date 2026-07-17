@@ -5,10 +5,33 @@ export type TestCase = {
 	run: () -> (),
 }
 
+export type Failure = {
+	test: string,
+	message: string,
+	traceback: string?,
+}
+
+export type Report = {
+	total: number,
+	passed: number,
+	failed: number,
+	skipped: number,
+	durationSeconds: number,
+	failures: { Failure },
+}
+
 local TestHarness = {}
 
-local function tracebackError(errorValue: unknown): string
-	return debug.traceback(tostring(errorValue), 2)
+type ErrorDetail = {
+	message: string,
+	traceback: string,
+}
+
+local function tracebackError(errorValue: unknown): ErrorDetail
+	return {
+		message = tostring(errorValue),
+		traceback = debug.traceback(tostring(errorValue), 2),
+	}
 end
 
 function TestHarness.assertTrue(value: boolean, message: string?)
@@ -23,25 +46,53 @@ function TestHarness.assertEqual<T>(actual: T, expected: T, message: string?)
 	end
 end
 
-function TestHarness.run(testCases: { TestCase })
-	local failures: { string } = {}
+function TestHarness.runAndCollect(testCases: { TestCase }): Report
+	local started = os.clock()
+	local failures: { Failure } = {}
+	local passed = 0
 
 	for _, testCase in testCases do
-		local ok, cause = xpcall(testCase.run, tracebackError)
+		local ok, causeValue = xpcall(testCase.run, tracebackError)
 
 		if ok then
-			print(`[Stage3Test] PASS {testCase.name}`)
+			passed += 1
+			print(`[Stage4Test] PASS {testCase.name}`)
 		else
-			table.insert(failures, `{testCase.name}: {cause}`)
-			warn(`[Stage3Test] FAIL {testCase.name}: {cause}`)
+			local cause = causeValue :: ErrorDetail
+			table.insert(failures, {
+				test = testCase.name,
+				message = cause.message,
+				traceback = cause.traceback,
+			})
+			warn(`[Stage4Test] FAIL {testCase.name}: {cause.traceback}`)
 		end
 	end
 
-	if #failures > 0 then
-		error(`Stage 3 runtime tests failed ({#failures}):\n{table.concat(failures, "\n")}`)
+	local report: Report = {
+		total = #testCases,
+		passed = passed,
+		failed = #failures,
+		skipped = 0,
+		durationSeconds = os.clock() - started,
+		failures = failures,
+	}
+	if report.failed == 0 then
+		print(`[Stage4Test] PASS all {report.total} runtime tests`)
 	end
+	return report
+end
 
-	print(`[Stage3Test] PASS all {#testCases} runtime tests`)
+function TestHarness.run(testCases: { TestCase }): Report
+	local report = TestHarness.runAndCollect(testCases)
+
+	if report.failed > 0 then
+		local messages = {}
+		for _, failure in report.failures do
+			table.insert(messages, `{failure.test}: {failure.message}`)
+		end
+		error(`Stage 4 runtime tests failed ({report.failed}):\n{table.concat(messages, "\n")}`)
+	end
+	return report
 end
 
 return table.freeze(TestHarness)

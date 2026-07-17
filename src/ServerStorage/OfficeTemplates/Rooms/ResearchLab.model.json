@@ -1,0 +1,197 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "ExperimentWall",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "SmoothPlastic",
+        "Color": [
+          0.93,
+          0.95,
+          0.98
+        ],
+        "Size": [
+          10,
+          5,
+          0.4
+        ],
+        "CFrame": [
+          0,
+          3,
+          -7,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "FormulaLine",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.18,
+          0.78,
+          0.85
+        ],
+        "Size": [
+          8,
+          0.3,
+          0.2
+        ],
+        "CFrame": [
+          0,
+          4,
+          -6.75,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "ContainmentPlinth",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.22,
+          0.25,
+          0.31
+        ],
+        "Size": [
+          4,
+          1.2,
+          4
+        ],
+        "CFrame": [
+          4,
+          0.6,
+          -3,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "SpecimenCase",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Glass",
+        "Color": [
+          0.18,
+          0.78,
+          0.85
+        ],
+        "Size": [
+          3,
+          4,
+          3
+        ],
+        "CFrame": [
+          4,
+          3.2,
+          -3,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        "Transparency": 0.45
+      }
+    },
+    {
+      "name": "HazardMarker",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.96,
+          0.55,
+          0.2
+        ],
+        "Size": [
+          2,
+          0.2,
+          2
+        ],
+        "CFrame": [
+          4,
+          1.3,
+          -3,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ]
+}

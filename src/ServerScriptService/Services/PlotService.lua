@@ -8,9 +8,9 @@ local LifecycleRegistry = require(ReplicatedStorage.Shared.Infrastructure.Lifecy
 local LoggerTypes = require(ReplicatedStorage.Shared.Types.LoggerTypes)
 local PlotBounds = require(ServerScriptService.Domain.PlotBounds)
 local PlotTypes = require(ServerScriptService.Domain.PlotTypes)
-local OfficeShellBuilder = require(ServerScriptService.Systems.OfficeShellBuilder)
+local PlotRuntimeBuilder = require(ServerScriptService.Systems.PlotRuntimeBuilder)
 
-type Builder = OfficeShellBuilder.Builder
+type Builder = PlotRuntimeBuilder.Builder
 type DependencyResolver = LifecycleRegistry.DependencyResolver
 type Logger = LoggerTypes.Logger
 type PlotAllocation = PlotTypes.PlotAllocation
@@ -297,6 +297,16 @@ function PlotService.GetRuntimePlotModel(self: Service, plotId: string): Model?
 	return if allocation ~= nil and allocation.state == "Active" then allocation.model else nil
 end
 
+function PlotService.GetOwnedPlotContextForUserId(self: Service, userId: number): Result<PlotContext>
+	local plotId = self._playerToPlot[userId]
+	if plotId == nil then
+		return AppTypes.failure("PlayerHasNoPlot", "Player has no assigned plot", {
+			userId = tostring(userId),
+		})
+	end
+	return self:RequireOwnership(userId, plotId)
+end
+
 function PlotService.GetSpawnCFrameForUserId(self: Service, userId: number): CFrame?
 	local spawnContext = self:GetSpawnContextForUserId(userId)
 	return if spawnContext ~= nil then spawnContext.spawnCFrame else nil
@@ -361,6 +371,7 @@ function PlotService.RequireOwnership(self: Service, userId: number, plotId: str
 	return AppTypes.success({
 		definition = definition,
 		model = model,
+		generationToken = allocation.generationToken,
 	})
 end
 
@@ -435,6 +446,12 @@ function PlotService.ValidateRuntimeState(self: Service): Result<true>
 		local spawnInstance = child:FindFirstChild("SpawnLocation")
 		if spawnInstance == nil or not spawnInstance:IsA("SpawnLocation") then
 			return AppTypes.failure("InvalidPlotSpawn", "Active plot has no SpawnLocation", {
+				plotId = plotId,
+			})
+		end
+		local anchor = child:FindFirstChild("PlotAnchor")
+		if anchor == nil or not anchor:IsA("BasePart") or child.PrimaryPart ~= anchor then
+			return AppTypes.failure("InvalidPlotAnchor", "Active plot has no stable PlotAnchor", {
 				plotId = plotId,
 			})
 		end

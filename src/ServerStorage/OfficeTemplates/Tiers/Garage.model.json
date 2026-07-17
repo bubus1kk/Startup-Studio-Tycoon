@@ -1,0 +1,231 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "FounderHeader",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.96,
+          0.55,
+          0.2
+        ],
+        "Size": [
+          10,
+          3,
+          0.4
+        ],
+        "CFrame": [
+          0,
+          2,
+          17.4,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "LeftRoofRail",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.22,
+          0.25,
+          0.31
+        ],
+        "Size": [
+          1,
+          1,
+          32
+        ],
+        "CFrame": [
+          -12,
+          6,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "RightRoofRail",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.22,
+          0.25,
+          0.31
+        ],
+        "Size": [
+          1,
+          1,
+          32
+        ],
+        "CFrame": [
+          12,
+          6,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "LeftToolColumn",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "DiamondPlate",
+        "Color": [
+          0.78,
+          0.84,
+          0.9
+        ],
+        "Size": [
+          1.2,
+          11,
+          1.2
+        ],
+        "CFrame": [
+          -22,
+          0,
+          -15,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "RightToolColumn",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "DiamondPlate",
+        "Color": [
+          0.78,
+          0.84,
+          0.9
+        ],
+        "Size": [
+          1.2,
+          11,
+          1.2
+        ],
+        "CFrame": [
+          22,
+          0,
+          -15,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "BackUtilityBeam",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.96,
+          0.55,
+          0.2
+        ],
+        "Size": [
+          42,
+          0.8,
+          0.8
+        ],
+        "CFrame": [
+          0,
+          5,
+          -16.5,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ]
+}

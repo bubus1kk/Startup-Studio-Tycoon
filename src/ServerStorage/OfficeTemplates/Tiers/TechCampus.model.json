@@ -1,0 +1,232 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "CentralSkylight",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Glass",
+        "Color": [
+          0.18,
+          0.78,
+          0.85
+        ],
+        "Size": [
+          28,
+          0.5,
+          16
+        ],
+        "CFrame": [
+          0,
+          11,
+          -8,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        "Transparency": 0.3
+      }
+    },
+    {
+      "name": "WestTruss",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.78,
+          0.84,
+          0.9
+        ],
+        "Size": [
+          1,
+          2,
+          62
+        ],
+        "CFrame": [
+          -30,
+          9,
+          -6,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "EastTruss",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.78,
+          0.84,
+          0.9
+        ],
+        "Size": [
+          1,
+          2,
+          62
+        ],
+        "CFrame": [
+          30,
+          9,
+          -6,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "InnovationArch",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.2,
+          0.7,
+          0.5
+        ],
+        "Size": [
+          34,
+          1,
+          1
+        ],
+        "CFrame": [
+          0,
+          8,
+          30,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "CampusLeftPillar",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Concrete",
+        "Color": [
+          0.22,
+          0.25,
+          0.31
+        ],
+        "Size": [
+          2,
+          18,
+          2
+        ],
+        "CFrame": [
+          -40,
+          0,
+          -36.5,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "CampusRightPillar",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Concrete",
+        "Color": [
+          0.22,
+          0.25,
+          0.31
+        ],
+        "Size": [
+          2,
+          18,
+          2
+        ],
+        "CFrame": [
+          40,
+          0,
+          -36.5,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ]
+}

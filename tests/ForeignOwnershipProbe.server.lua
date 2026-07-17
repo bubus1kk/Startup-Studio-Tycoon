@@ -2,6 +2,12 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StudioTestService = game:GetService("StudioTestService")
+
+local testArgs = StudioTestService:GetTestArgs()
+if typeof(testArgs) == "table" and testArgs.stage == 4 and typeof(testArgs.suite) == "string" then
+	return
+end
 
 local LifecycleRegistry = require(ReplicatedStorage.Shared.Infrastructure.LifecycleRegistry)
 local Logger = require(ReplicatedStorage.Shared.Infrastructure.Logger)

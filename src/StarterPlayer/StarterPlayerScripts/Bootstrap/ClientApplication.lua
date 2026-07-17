@@ -23,6 +23,7 @@ end
 -- with the required classes before the static requires preserve their types.
 local ControllerRegistry = require(playerScripts.Infrastructure.ControllerRegistry)
 local RemoteClient = require(playerScripts.Infrastructure.RemoteClient)
+local BuildMenuController = require(playerScripts.Controllers.BuildMenuController)
 
 type AppError = AppTypes.AppError
 type Result<T> = AppTypes.Result<T>
@@ -68,6 +69,7 @@ function ClientApplication.new(): Result<Application>
 	end)
 	local remoteClient =
 		RemoteClient.new(ReplicatedStorage, RemoteDefinitions.folderName, RemoteDefinitions.definitions)
+	local buildMenuController = BuildMenuController.new(game:GetService("Players").LocalPlayer)
 
 	local registrationResult = registry:Register({
 		name = "RemoteClient",
@@ -90,6 +92,30 @@ function ClientApplication.new(): Result<Application>
 			registrationResult.error.code,
 			registrationResult.error.message,
 			registrationResult.error.details
+		)
+	end
+
+	local buildMenuRegistrationResult = registry:Register({
+		name = "BuildMenuController",
+		dependencies = { "RemoteClient" },
+		value = buildMenuController,
+		hooks = {
+			Init = function(dependencies)
+				buildMenuController:Init(dependencies)
+			end,
+			Start = function()
+				buildMenuController:Start()
+			end,
+			Destroy = function()
+				buildMenuController:Destroy()
+			end,
+		},
+	})
+	if not buildMenuRegistrationResult.ok then
+		return AppTypes.failure(
+			buildMenuRegistrationResult.error.code,
+			buildMenuRegistrationResult.error.message,
+			buildMenuRegistrationResult.error.details
 		)
 	end
 

@@ -1,0 +1,233 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "LobbyCanopy",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.84,
+          0.62,
+          0.22
+        ],
+        "Size": [
+          18,
+          1,
+          4
+        ],
+        "CFrame": [
+          0,
+          7,
+          27,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "LeftLobbyMullion",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.1,
+          0.13,
+          0.18
+        ],
+        "Size": [
+          0.7,
+          11,
+          0.7
+        ],
+        "CFrame": [
+          -7,
+          0,
+          28.5,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "RightLobbyMullion",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.1,
+          0.13,
+          0.18
+        ],
+        "Size": [
+          0.7,
+          11,
+          0.7
+        ],
+        "CFrame": [
+          7,
+          0,
+          28.5,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "ReceptionLightBand",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.18,
+          0.78,
+          0.85
+        ],
+        "Size": [
+          32,
+          0.45,
+          0.45
+        ],
+        "CFrame": [
+          0,
+          8,
+          -1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "WestWindowRibbon",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Glass",
+        "Color": [
+          0.2,
+          0.5,
+          0.86
+        ],
+        "Size": [
+          0.35,
+          8,
+          34
+        ],
+        "CFrame": [
+          -39,
+          0,
+          -4,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        "Transparency": 0.4
+      }
+    },
+    {
+      "name": "EastWindowRibbon",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Glass",
+        "Color": [
+          0.2,
+          0.5,
+          0.86
+        ],
+        "Size": [
+          0.35,
+          8,
+          34
+        ],
+        "CFrame": [
+          39,
+          0,
+          -4,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        "Transparency": 0.4
+      }
+    }
+  ]
+}

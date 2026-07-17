@@ -9,7 +9,7 @@ local LifecycleRegistry = require(ReplicatedStorage.Shared.Infrastructure.Lifecy
 local Logger = require(ReplicatedStorage.Shared.Infrastructure.Logger)
 local PlotConfigValidator = require(ServerScriptService.Config.PlotConfigValidator)
 local PlotService = require(ServerScriptService.Services.PlotService)
-local OfficeShellBuilder = require(ServerScriptService.Systems.OfficeShellBuilder)
+local PlotRuntimeBuilder = require(ServerScriptService.Systems.PlotRuntimeBuilder)
 local PlotDefinitions = require(ServerStorage.Config.PlotDefinitions)
 
 export type Fixture = {
@@ -30,12 +30,12 @@ function PlotTestUtils.validatedConfig(): PlotConfigValidator.PlotConfig
 	return result.value
 end
 
-function PlotTestUtils.createFixture(partCreationHook: OfficeShellBuilder.PartCreationHook?): Fixture
+function PlotTestUtils.createFixture(partCreationHook: PlotRuntimeBuilder.PartCreationHook?): Fixture
 	local root = Instance.new("Folder")
 	root.Name = "PlotTestRuntime"
 	local logger = Logger.new("Test", "studio-runtime", "PlotTestFixture", true)
 	local config = PlotTestUtils.validatedConfig()
-	local service = PlotService.new(root, config, OfficeShellBuilder.new(partCreationHook), logger)
+	local service = PlotService.new(root, config, PlotRuntimeBuilder.new(partCreationHook), logger)
 	local registry = LifecycleRegistry.new(nil)
 	local registrationResult = registry:Register({
 		name = "PlotService",

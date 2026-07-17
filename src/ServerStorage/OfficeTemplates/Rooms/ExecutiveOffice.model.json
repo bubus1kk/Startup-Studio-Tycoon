@@ -1,0 +1,197 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "ExecutiveBackdrop",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Wood",
+        "Color": [
+          0.1,
+          0.13,
+          0.18
+        ],
+        "Size": [
+          11,
+          6,
+          0.5
+        ],
+        "CFrame": [
+          0,
+          3.5,
+          -7,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "GoldInlay",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.84,
+          0.62,
+          0.22
+        ],
+        "Size": [
+          8,
+          0.35,
+          0.2
+        ],
+        "CFrame": [
+          0,
+          4,
+          -6.7,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "CityMap",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Glass",
+        "Color": [
+          0.2,
+          0.5,
+          0.86
+        ],
+        "Size": [
+          5,
+          3,
+          0.2
+        ],
+        "CFrame": [
+          0,
+          3,
+          -6.65,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        "Transparency": 0.2
+      }
+    },
+    {
+      "name": "VisitorBench",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Fabric",
+        "Color": [
+          0.45,
+          0.25,
+          0.12
+        ],
+        "Size": [
+          5,
+          2,
+          2
+        ],
+        "CFrame": [
+          -4,
+          1,
+          4,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "Planter",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "SmoothPlastic",
+        "Color": [
+          0.2,
+          0.7,
+          0.5
+        ],
+        "Size": [
+          2,
+          4,
+          2
+        ],
+        "CFrame": [
+          6,
+          2,
+          -5,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ]
+}

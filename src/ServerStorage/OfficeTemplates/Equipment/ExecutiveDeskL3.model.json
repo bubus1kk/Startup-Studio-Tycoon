@@ -1,0 +1,231 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "Pivot",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1,
+        "Size": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "GlobalExecutiveDesk",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Marble",
+        "Color": [
+          0.1,
+          0.13,
+          0.18
+        ],
+        "Size": [
+          5.8,
+          2.2,
+          3.6
+        ],
+        "CFrame": [
+          0,
+          1.1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "CommandMap",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Glass",
+        "Color": [
+          0.2,
+          0.5,
+          0.86
+        ],
+        "Size": [
+          4.6,
+          1.9,
+          0.25
+        ],
+        "CFrame": [
+          0,
+          3.1,
+          -1.15,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "SecureVaultLeft",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.22,
+          0.25,
+          0.31
+        ],
+        "Size": [
+          1.1,
+          2.6,
+          1.4
+        ],
+        "CFrame": [
+          -2.2,
+          2.5,
+          0.3,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "SecureVaultRight",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Metal",
+        "Color": [
+          0.22,
+          0.25,
+          0.31
+        ],
+        "Size": [
+          1.1,
+          2.6,
+          1.4
+        ],
+        "CFrame": [
+          2.2,
+          2.5,
+          0.3,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "GoldControlRail",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.84,
+          0.62,
+          0.22
+        ],
+        "Size": [
+          4.5,
+          0.35,
+          0.7
+        ],
+        "CFrame": [
+          0,
+          2.4,
+          0.9,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "LeadershipLight",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Material": "Neon",
+        "Color": [
+          0.93,
+          0.95,
+          0.98
+        ],
+        "Size": [
+          4,
+          0.35,
+          1
+        ],
+        "CFrame": [
+          0,
+          4.6,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ]
+}

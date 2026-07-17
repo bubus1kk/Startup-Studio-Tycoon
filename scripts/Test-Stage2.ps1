@@ -110,7 +110,18 @@ Assert-Stage2 -Condition (-not $remoteClient.Contains('Instance.new("RemoteEvent
 Assert-Stage2 -Condition (-not $remoteClient.Contains('Instance.new("RemoteFunction")')) -Message "Client must never create RemoteFunctions"
 
 $remoteDefinitions = Read-ProjectFile "src/ReplicatedStorage/Shared/Remotes/RemoteDefinitions.lua"
-Assert-Stage2 -Condition ($remoteDefinitions.Contains("local definitions: { RemoteDefinition } = {}")) -Message "Production remote definitions must remain empty in Stage 2"
+$approvedProductionRemotes = @("RequestOfficeCatalog", "RequestOfficePurchase")
+foreach ($remoteName in $approvedProductionRemotes) {
+	$definitionCount = ([regex]::Matches($remoteDefinitions, "name\s*=\s*`"$remoteName`"")).Count
+	Assert-Stage2 -Condition ($definitionCount -eq 1) -Message "Approved production remote must be defined exactly once: $remoteName"
+}
+$productionRemoteNames = [regex]::Matches($remoteDefinitions, 'name\s*=\s*"([A-Za-z0-9]+)"') | ForEach-Object { $_.Groups[1].Value }
+Assert-Stage2 -Condition ($productionRemoteNames.Count -eq 2) -Message "Production RemoteDefinitions contains an unapproved or duplicate remote"
+foreach ($testOnlyName in @("TestRequest", "TestFunction", "TestPlotMutation", "TestOfficePurchase")) {
+	Assert-Stage2 -Condition (-not $remoteDefinitions.Contains($testOnlyName)) -Message "Test-only remote leaked into production definitions: $testOnlyName"
+}
+Assert-Stage2 -Condition ($remoteDefinitions.Contains("requestValidator")) -Message "Production remotes must retain request payload validation"
+Assert-Stage2 -Condition ($remoteDefinitions.Contains("responseValidator")) -Message "Production functions must retain response payload validation"
 
 $serviceRegistry = Read-ProjectFile "src/ServerScriptService/Infrastructure/ServiceRegistry.lua"
 $controllerRegistry = Read-ProjectFile "src/StarterPlayer/StarterPlayerScripts/Infrastructure/ControllerRegistry.lua"
