@@ -87,28 +87,34 @@
 
 ## 5. Сотрудники
 
+Stage 5 реализует самостоятельный employee loop без продуктовой экономики Stage 6: Candidate Board → server-authoritative hire → совместимое рабочее место → NPC movement → role work points → payroll/morale/XP. Work points пока не создают Cash и не назначаются продукту.
+
 | Роль | Основной вклад | Вторичный вклад |
 |---|---|---|
 | Developer | скорость разработки | качество и технический долг |
 | Designer | UX и market fit | hype |
 | QA Engineer | снижение багов | retention |
-| Product Manager | координация | уменьшение штрафа большой команды |
 | Marketer | launch hype | привлечение аудитории |
+| Product Manager | координация | уменьшение штрафа большой команды |
+| System Administrator | надёжность инфраструктуры | будущая эксплуатация |
+| HR Specialist | восстановление morale | найм |
+| Executive | общий управленческий вклад | будущая стратегия |
+| Researcher | исследования | будущие unlocks |
 
 Характеристики:
 
 - уровень;
-- редкость;
-- продуктивность;
+- grade: Trainee, Junior, Specialist, Expert;
+- speed, quality, reliability;
 - зарплата;
 - morale;
-- специализация;
-- traits;
-- fatigue;
+- один из двенадцати traits;
 - assigned desk;
-- assigned product.
+- status: Active, Unpaid, Inactive или Dismissed.
 
 Статы должны быть понятны из карточки сотрудника.
+
+Candidate Board всегда содержит три server-generated карточки с TTL 300 секунд; ручной refresh имеет cooldown 120 секунд. Payroll выполняется атомарно раз в 60 секунд активного server time. На Stage 5 нет fatigue, passive morale decay, assigned product, revenue, offline productivity или cross-server save.
 
 ## 6. Продукты
 

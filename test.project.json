@@ -1,5 +1,5 @@
 {
-  "name": "StartupStudioTycoonStage4Tests",
+  "name": "StartupStudioTycoonStage5Tests",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
@@ -87,6 +87,27 @@
         },
         "Stage4AcceptanceRouter": {
           "$path": "tests/acceptance/Stage4AcceptanceRouter.server.lua"
+        }
+      },
+      "Stage5Acceptance": {
+        "$className": "Folder",
+        "AcceptanceTestUtils": {
+          "$path": "tests/acceptance/AcceptanceTestUtils.lua"
+        },
+        "Stage5SoloAcceptance": {
+          "$path": "tests/acceptance/Stage5SoloAcceptance.lua"
+        },
+        "Stage5MultiplayerAcceptance": {
+          "$path": "tests/acceptance/Stage5MultiplayerAcceptance.lua"
+        },
+        "Stage5NpcAcceptance": {
+          "$path": "tests/acceptance/Stage5NpcAcceptance.lua"
+        },
+        "Stage5BlockedPathAcceptance": {
+          "$path": "tests/acceptance/Stage5BlockedPathAcceptance.lua"
+        },
+        "Stage5AcceptanceRouter": {
+          "$path": "tests/acceptance/Stage5AcceptanceRouter.server.lua"
         }
       }
     },

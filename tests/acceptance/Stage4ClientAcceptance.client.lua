@@ -8,7 +8,11 @@ local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 local testArgs = StudioTestService:GetTestArgs()
-if typeof(testArgs) ~= "table" or testArgs.stage ~= 4 or typeof(testArgs.suite) ~= "string" then
+if
+	typeof(testArgs) ~= "table"
+	or (testArgs.stage ~= 4 and testArgs.stage ~= 5)
+	or typeof(testArgs.suite) ~= "string"
+then
 	return
 end
 
@@ -393,6 +397,14 @@ local function runUiAcceptance(): { TestResult }
 		local spec = require(clientSpecs.BuildMenuControllerClientSpec)
 		spec.run()
 	end)
+	if testArgs.stage == 5 then
+		runTest(tests, "employee controller exception, stale response and destroy safety", function()
+			local clientSpecs = script.Parent:WaitForChild("ClientSpecs", 15)
+			assert(clientSpecs:IsA("Folder"), "ClientSpecs folder is unavailable")
+			local spec = require(clientSpecs.EmployeesControllerClientSpec)
+			spec.run()
+		end)
+	end
 
 	local virtualInputOk, virtualInputValue = pcall(function(): unknown
 		return UserInputService:CreateVirtualInput()
@@ -476,6 +488,187 @@ local function handleCommand(command: string, payload: { [string]: unknown }): C
 		return { ok = true, data = { code = code, foreignPlotId = foreignPlotId } }
 	elseif command == "RunUI" then
 		return { ok = true, tests = runUiAcceptance() }
+	elseif command == "EmployeeOverview" then
+		local remote = getRemoteFunction("RequestEmployeeOverview")
+		local value = callWithTimeout(function(): unknown
+			return remote:InvokeServer({ rosterPage = 1 })
+		end, REMOTE_CALL_TIMEOUT_SECONDS, "employee overview")
+		assert(typeof(value) == "table", "Employee overview returned a non-table response")
+		return { ok = true, data = value :: { [string]: unknown } }
+	elseif command == "EmployeeHireCount" then
+		local countValue = payload.count
+		assert(
+			typeof(countValue) == "number" and countValue >= 1 and countValue <= 30,
+			"EmployeeHireCount requires count 1..30"
+		)
+		local count = countValue :: number
+		local overviewRemote = getRemoteFunction("RequestEmployeeOverview")
+		local hireRemote = getRemoteFunction("RequestEmployeeHire")
+		local latest: { [string]: unknown }? = nil
+		local deadline = os.clock() + COMMAND_TIMEOUT_SECONDS
+		while true do
+			local overviewValue = callWithTimeout(function(): unknown
+				return overviewRemote:InvokeServer({ rosterPage = 1 })
+			end, REMOTE_CALL_TIMEOUT_SECONDS, "employee hiring overview")
+			assert(typeof(overviewValue) == "table", "Employee hiring overview returned non-table")
+			local overview = overviewValue :: { [string]: unknown }
+			assert(overview.ok == true, "Employee hiring overview failed")
+			latest = overview
+			if overview.rosterTotal == count then
+				break
+			end
+			assert(
+				typeof(overview.rosterTotal) == "number" and overview.rosterTotal < count,
+				"Employee roster exceeded target"
+			)
+			local candidates = overview.candidates
+			assert(typeof(candidates) == "table" and #candidates == 3, "Candidate board is not size 3")
+			local hired = false
+			for _, candidateValue in candidates do
+				local candidate = candidateValue :: { [string]: unknown }
+				local candidateId = candidate.candidateId
+				assert(typeof(candidateId) == "string", "Candidate ID is invalid")
+				local responseValue = callWithTimeout(function(): unknown
+					return hireRemote:InvokeServer({
+						requestId = nextRequestId("accept-hire"),
+						candidateId = candidateId,
+					})
+				end, REMOTE_CALL_TIMEOUT_SECONDS, "employee hire")
+				assert(typeof(responseValue) == "table", "Employee hire returned non-table")
+				local response = responseValue :: { [string]: unknown }
+				if response.ok == true then
+					hired = true
+					break
+				end
+				local errorValue = response.error
+				local code = if typeof(errorValue) == "table" then errorValue.code else nil
+				if code == "RateLimited" then
+					boundedDelay(0.4, deadline, "employee rate limit backoff")
+				end
+			end
+			assert(os.clock() < deadline, "Employee hiring command timed out")
+			if not hired then
+				boundedDelay(0.4, deadline, "employee hire retry")
+			end
+		end
+		return { ok = true, data = latest }
+	elseif command == "EmployeeForeignDismiss" then
+		local employeeId = payload.employeeId
+		assert(typeof(employeeId) == "string", "EmployeeForeignDismiss requires employeeId")
+		local remote = getRemoteFunction("RequestEmployeeDismiss")
+		local value = callWithTimeout(function(): unknown
+			return remote:InvokeServer({ requestId = nextRequestId("foreign-dismiss"), employeeId = employeeId })
+		end, REMOTE_CALL_TIMEOUT_SECONDS, "foreign employee dismiss")
+		assert(typeof(value) == "table", "Foreign dismiss returned non-table")
+		local response = value :: { [string]: unknown }
+		local errorValue = response.error
+		local code = if typeof(errorValue) == "table" then errorValue.code else nil
+		assert(response.ok == false and code == "ForeignEmployee", `Foreign dismiss was not rejected: {tostring(code)}`)
+		return { ok = true, data = { code = code } }
+	elseif command == "EmployeeRefresh" then
+		local remote = getRemoteFunction("RequestCandidateRefresh")
+		local value = callWithTimeout(function(): unknown
+			return remote:InvokeServer({ requestId = nextRequestId("accept-refresh") })
+		end, REMOTE_CALL_TIMEOUT_SECONDS, "candidate refresh")
+		assert(typeof(value) == "table", "Candidate refresh returned non-table")
+		return { ok = true, data = value :: { [string]: unknown } }
+	elseif command == "EmployeeHireCandidate" then
+		local candidateId = payload.candidateId
+		assert(typeof(candidateId) == "string", "EmployeeHireCandidate requires candidateId")
+		local remote = getRemoteFunction("RequestEmployeeHire")
+		local value = callWithTimeout(function(): unknown
+			return remote:InvokeServer({ requestId = nextRequestId("accept-hire-id"), candidateId = candidateId })
+		end, REMOTE_CALL_TIMEOUT_SECONDS, "employee hire by candidate ID")
+		assert(typeof(value) == "table", "Employee hire by ID returned non-table")
+		return { ok = true, data = value :: { [string]: unknown } }
+	elseif command == "EmployeeAssign" then
+		local employeeId = payload.employeeId
+		local workstationId = payload.workstationId
+		assert(typeof(employeeId) == "string", "EmployeeAssign requires employeeId")
+		assert(typeof(workstationId) == "string", "EmployeeAssign requires workstationId")
+		local remote = getRemoteFunction("RequestEmployeeAssignment")
+		local value = callWithTimeout(function(): unknown
+			return remote:InvokeServer({
+				requestId = nextRequestId("accept-assign"),
+				employeeId = employeeId,
+				workstationId = workstationId,
+			})
+		end, REMOTE_CALL_TIMEOUT_SECONDS, "employee assignment")
+		assert(typeof(value) == "table", "Employee assignment returned non-table")
+		return { ok = true, data = value :: { [string]: unknown } }
+	elseif command == "EmployeeDismissOwn" then
+		local employeeId = payload.employeeId
+		assert(typeof(employeeId) == "string", "EmployeeDismissOwn requires employeeId")
+		local remote = getRemoteFunction("RequestEmployeeDismiss")
+		local value = callWithTimeout(function(): unknown
+			return remote:InvokeServer({ requestId = nextRequestId("accept-dismiss"), employeeId = employeeId })
+		end, REMOTE_CALL_TIMEOUT_SECONDS, "employee dismiss")
+		assert(typeof(value) == "table", "Employee dismiss returned non-table")
+		return { ok = true, data = value :: { [string]: unknown } }
+	elseif command == "EmployeeDismissAll" then
+		local overviewRemote = getRemoteFunction("RequestEmployeeOverview")
+		local dismissRemote = getRemoteFunction("RequestEmployeeDismiss")
+		local deadline = os.clock() + COMMAND_TIMEOUT_SECONDS
+		local latest: { [string]: unknown }? = nil
+		while true do
+			local overviewValue = callWithTimeout(function(): unknown
+				return overviewRemote:InvokeServer({ rosterPage = 1 })
+			end, REMOTE_CALL_TIMEOUT_SECONDS, "employee cleanup overview")
+			assert(typeof(overviewValue) == "table", "Employee cleanup overview returned non-table")
+			local overview = overviewValue :: { [string]: unknown }
+			latest = overview
+			if overview.rosterTotal == 0 then
+				break
+			end
+			local roster = overview.roster
+			assert(typeof(roster) == "table" and #roster > 0, "Employee cleanup roster is empty")
+			local employeeId = (roster[1] :: { [string]: unknown }).employeeId
+			assert(typeof(employeeId) == "string", "Employee cleanup ID is invalid")
+			local responseValue = callWithTimeout(function(): unknown
+				return dismissRemote:InvokeServer({
+					requestId = nextRequestId("accept-dismiss-all"),
+					employeeId = employeeId,
+				})
+			end, REMOTE_CALL_TIMEOUT_SECONDS, "employee cleanup dismiss")
+			assert(typeof(responseValue) == "table", "Employee cleanup dismiss returned non-table")
+			local response = responseValue :: { [string]: unknown }
+			if response.ok == true then
+				latest = response.overview :: { [string]: unknown }
+			else
+				local errorValue = response.error
+				local code = if typeof(errorValue) == "table" then errorValue.code else nil
+				assert(code == "RateLimited", `Employee cleanup failed: {tostring(code)}`)
+				boundedDelay(0.4, deadline, "employee cleanup rate limit backoff")
+			end
+			assert(os.clock() < deadline, "Employee cleanup command timed out")
+		end
+		return { ok = true, data = latest }
+	elseif command == "EmployeeUiSmoke" then
+		local playerGui = localPlayer:FindFirstChildOfClass("PlayerGui")
+		assert(playerGui ~= nil, "PlayerGui is unavailable")
+		local guiCount = 0
+		local buttonCount = 0
+		for _, descendant in playerGui:GetDescendants() do
+			if descendant:IsA("ScreenGui") and descendant.Name == "EmployeesGui" then
+				guiCount += 1
+			elseif descendant:IsA("TextButton") and descendant.Name == "EmployeesButton" then
+				buttonCount += 1
+			end
+		end
+		local gui = playerGui:FindFirstChild("EmployeesGui")
+		local buttonValue = if gui ~= nil then gui:FindFirstChild("EmployeesButton", true) else nil
+		local panelValue = if gui ~= nil then gui:FindFirstChild("EmployeesPanel", true) else nil
+		assert(guiCount == 1 and buttonCount == 1, "Employees GUI/button duplicated")
+		assert(gui ~= nil and gui:IsA("ScreenGui"), "EmployeesGui is missing")
+		assert(buttonValue ~= nil and buttonValue:IsA("TextButton"), "Employees button is missing")
+		assert(panelValue ~= nil and panelValue:IsA("Frame"), "Employees panel is missing")
+		return { ok = true, data = { guiCount = guiCount, buttonCount = buttonCount } }
+	elseif command == "EmployeeRunClientSpecs" then
+		local clientSpecs = script.Parent:WaitForChild("ClientSpecs", 15)
+		assert(clientSpecs:IsA("Folder"), "ClientSpecs folder is unavailable")
+		local spec = require(clientSpecs.EmployeesControllerClientSpec)
+		spec.run()
+		return { ok = true, data = { employeeClientSpecs = true } }
 	elseif command == "Leave" then
 		local canLeave = StudioTestService:CanLeaveTest()
 		if not canLeave then

@@ -3,7 +3,7 @@
 local AppTypes = require(script.Parent.Parent.Types.AppTypes)
 
 type Result<T> = AppTypes.Result<T>
-type Budget = { nodes: number }
+type Budget = { nodes: number, maxDepth: number, maxNodes: number }
 
 export type Rule = (value: unknown, path: string, depth: number, budget: Budget) -> Result<true>
 export type Validator = (value: unknown) -> Result<true>
@@ -29,6 +29,11 @@ export type CollectionOptions = {
 	maxItems: number?,
 }
 
+export type CompileOptions = {
+	maxDepth: number?,
+	maxNodes: number?,
+}
+
 local DEFAULT_MAX_DEPTH = 8
 local DEFAULT_MAX_NODES = 128
 
@@ -43,12 +48,12 @@ local function invalid(path: string, reason: string, actual: string?): AppTypes.
 end
 
 local function consumeNode(path: string, depth: number, budget: Budget): Result<true>
-	if depth > DEFAULT_MAX_DEPTH then
+	if depth > budget.maxDepth then
 		return invalid(path, "maximum depth exceeded", tostring(depth))
 	end
 
 	budget.nodes += 1
-	if budget.nodes > DEFAULT_MAX_NODES then
+	if budget.nodes > budget.maxNodes then
 		return invalid(path, "maximum node count exceeded", tostring(budget.nodes))
 	end
 
@@ -205,9 +210,13 @@ function PayloadValidator.array(itemRule: Rule, options: CollectionOptions?): Ru
 	end
 end
 
-function PayloadValidator.compile(rule: Rule): Validator
+function PayloadValidator.compile(rule: Rule, options: CompileOptions?): Validator
 	return function(value: unknown): Result<true>
-		return rule(value, "$", 0, { nodes = 0 })
+		return rule(value, "$", 0, {
+			nodes = 0,
+			maxDepth = if options ~= nil and options.maxDepth ~= nil then options.maxDepth else DEFAULT_MAX_DEPTH,
+			maxNodes = if options ~= nil and options.maxNodes ~= nil then options.maxNodes else DEFAULT_MAX_NODES,
+		})
 	end
 end
 

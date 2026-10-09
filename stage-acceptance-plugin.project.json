@@ -16,6 +16,12 @@
     },
     "AcceptanceTypes": {
       "$path": "tools/StageAcceptancePlugin/AcceptanceTypes.lua"
+    },
+    "ContractVersion": {
+      "$className": "StringValue",
+      "$properties": {
+        "Value": "Stage5"
+      }
     }
   }
 }

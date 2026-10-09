@@ -110,13 +110,21 @@ Assert-Stage2 -Condition (-not $remoteClient.Contains('Instance.new("RemoteEvent
 Assert-Stage2 -Condition (-not $remoteClient.Contains('Instance.new("RemoteFunction")')) -Message "Client must never create RemoteFunctions"
 
 $remoteDefinitions = Read-ProjectFile "src/ReplicatedStorage/Shared/Remotes/RemoteDefinitions.lua"
-$approvedProductionRemotes = @("RequestOfficeCatalog", "RequestOfficePurchase")
+$approvedProductionRemotes = @(
+	"RequestOfficeCatalog",
+	"RequestOfficePurchase",
+	"RequestEmployeeOverview",
+	"RequestEmployeeHire",
+	"RequestEmployeeAssignment",
+	"RequestEmployeeDismiss",
+	"RequestCandidateRefresh"
+)
 foreach ($remoteName in $approvedProductionRemotes) {
 	$definitionCount = ([regex]::Matches($remoteDefinitions, "name\s*=\s*`"$remoteName`"")).Count
 	Assert-Stage2 -Condition ($definitionCount -eq 1) -Message "Approved production remote must be defined exactly once: $remoteName"
 }
 $productionRemoteNames = [regex]::Matches($remoteDefinitions, 'name\s*=\s*"([A-Za-z0-9]+)"') | ForEach-Object { $_.Groups[1].Value }
-Assert-Stage2 -Condition ($productionRemoteNames.Count -eq 2) -Message "Production RemoteDefinitions contains an unapproved or duplicate remote"
+Assert-Stage2 -Condition ($productionRemoteNames.Count -eq $approvedProductionRemotes.Count) -Message "Production RemoteDefinitions contains an unapproved or duplicate remote"
 foreach ($testOnlyName in @("TestRequest", "TestFunction", "TestPlotMutation", "TestOfficePurchase")) {
 	Assert-Stage2 -Condition (-not $remoteDefinitions.Contains($testOnlyName)) -Message "Test-only remote leaked into production definitions: $testOnlyName"
 }

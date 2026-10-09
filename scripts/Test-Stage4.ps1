@@ -114,7 +114,7 @@ $testRunner = Read-ProjectFile "tests/TestRunner.server.lua"
 foreach ($spec in @("OfficeEntranceApproachSpec", "OfficeFullLayoutPerformanceSpec", "OfficeRejoinSpec", "OfficeMultiplayerSpec", "OfficeRemoteSpec", "ProductionOfficeRuntimeSpec")) {
 	Assert-Stage4 -Condition ($testRunner.Contains($spec)) -Message "Required runtime spec is not routed by TestRunner: $spec"
 }
-foreach ($field in @('suite = "Stage4Runtime"', "total = finalReport.total", "runtimeTestsExecuted = finalReport.total")) {
+foreach ($field in @('"Stage4Runtime"', '"Stage5Runtime"', "total = finalReport.total", "runtimeTestsExecuted = finalReport.total")) {
 	Assert-Stage4 -Condition ($testRunner.Contains($field)) -Message "Structured runtime report contract missing: $field"
 }
 Assert-Stage4 -Condition ($testRunner.Contains("AcceptanceRunnerSpec")) -Message "Plugin runner fake-executor unit tests are not routed by TestRunner"
@@ -263,11 +263,11 @@ foreach ($contract in @("simulated transport exception", "Purchase retry", "out-
 }
 
 $remoteDefinitions = Read-ProjectFile "src/ReplicatedStorage/Shared/Remotes/RemoteDefinitions.lua"
-foreach ($remoteName in @("RequestOfficeCatalog", "RequestOfficePurchase")) {
+foreach ($remoteName in @("RequestOfficeCatalog", "RequestOfficePurchase", "RequestEmployeeOverview", "RequestEmployeeHire", "RequestEmployeeAssignment", "RequestEmployeeDismiss", "RequestCandidateRefresh")) {
 	Assert-Stage4 -Condition (([regex]::Matches($remoteDefinitions, "name\s*=\s*`"$remoteName`"")).Count -eq 1) -Message "Approved production remote must appear once: $remoteName"
 }
 $productionRemoteNames = @([regex]::Matches($remoteDefinitions, 'name\s*=\s*"([A-Za-z0-9_]+)"') | ForEach-Object { $_.Groups[1].Value })
-Assert-Stage4 -Condition ($productionRemoteNames.Count -eq 2) -Message "Production must contain exactly two approved remotes"
+Assert-Stage4 -Condition ($productionRemoteNames.Count -eq 7) -Message "Stage 5 production must contain exactly seven approved remotes"
 foreach ($testRemote in @("TestPlotMutation", "TestOfficePurchase", "Stage3TestRemotes", "Stage4TestRemotes")) {
 	Assert-Stage4 -Condition (-not $remoteDefinitions.Contains($testRemote)) -Message "Test-only remote leaked into production: $testRemote"
 }
@@ -292,7 +292,7 @@ foreach ($serviceFile in @("SessionCurrencyService.lua", "OfficeSnapshotCache.lu
 Assert-Stage4 -Condition ($playerSession.Contains("self._players.PlayerAdded:Connect")) -Message "PlayerSessionService must own PlayerAdded"
 
 $stage4ProductionText = ($productionFiles | ForEach-Object { Read-ProjectFile $_ }) -join "`n"
-foreach ($forbidden in @("DataStoreService", "ProfileService", "PathfindingService", "HumanoidDescription", "payroll", "prestige")) {
+foreach ($forbidden in @("DataStoreService", "ProfileService", "ProductService", "RevenueService", "prestige")) {
 	Assert-Stage4 -Condition (-not $stage4ProductionText.Contains($forbidden)) -Message "Out-of-scope system found in Stage 4 production: $forbidden"
 }
 
@@ -306,9 +306,9 @@ Assert-Stage4 -Condition ($manualQa.Contains("Reset Character 5 раз")) -Messa
 $agents = Read-ProjectFile "AGENTS.md"
 Assert-Stage4 -Condition ($agents.Contains("scripts/Test-Stage4.ps1")) -Message "AGENTS required checks do not include Stage 4"
 $ci = Read-ProjectFile ".github/workflows/ci.yml"
-Assert-Stage4 -Condition ($ci.Contains("name: Stage 1 through 4 CI")) -Message "CI display name is not Stage 1 through 4"
+Assert-Stage4 -Condition ($ci.Contains("name: Stage 1 through 5 CI")) -Message "CI display name is not Stage 1 through 5"
 Assert-Stage4 -Condition ($ci.Contains("Test-Stage4.ps1")) -Message "CI does not run Stage 4 structural tests"
-Assert-Stage4 -Condition ($ci.Contains("StartupStudioTycoonStage4Tests.rbxl")) -Message "CI does not build the Stage 4 test place"
+Assert-Stage4 -Condition ($ci.Contains("StartupStudioTycoonStage5Tests.rbxl")) -Message "CI does not build the Stage 5 regression test place"
 
 $productionProjectText = Read-ProjectFile "default.project.json"
 $testProjectText = Read-ProjectFile "test.project.json"
@@ -317,7 +317,7 @@ $testProject = $testProjectText | ConvertFrom-Json
 Assert-Stage4 -Condition (-not $productionProjectText.Contains("tests/")) -Message "Production project maps test content"
 Assert-Stage4 -Condition (-not $productionProjectText.Contains("tools/")) -Message "Production project maps tools content"
 Assert-Stage4 -Condition (-not $productionProjectText.Contains("plugin")) -Message "Production project maps plugin content"
-Assert-Stage4 -Condition ($testProject.name -eq "StartupStudioTycoonStage4Tests") -Message "Stage 4 test project name is incorrect"
+Assert-Stage4 -Condition ($testProject.name -eq "StartupStudioTycoonStage5Tests") -Message "Stage 5 regression test project name is incorrect"
 Assert-Stage4 -Condition ($testProject.tree.ServerStorage.OfficeTemplates.'$path' -eq "src/ServerStorage/OfficeTemplates") -Message "Test project does not map server-only office templates"
 Assert-Stage4 -Condition ($testProject.tree.ServerScriptService.Stage4Acceptance.Stage4AcceptanceRouter.'$path' -eq "tests/acceptance/Stage4AcceptanceRouter.server.lua") -Message "Acceptance server router is not mapped into the test project"
 Assert-Stage4 -Condition ($testProject.tree.ServerScriptService.Stage4Acceptance.PluginRunnerUnderTest.AcceptanceRunner.'$path' -eq "tools/StageAcceptancePlugin/AcceptanceRunner.lua") -Message "Pure plugin runner module is not mapped for fake-executor runtime tests"
@@ -330,7 +330,7 @@ Assert-Stage4 -Condition ($pluginProjectText.Contains("tools/StageAcceptancePlug
 Assert-Stage4 -Condition (-not $pluginProjectText.Contains('"src/')) -Message "Plugin project maps production sources"
 Assert-Stage4 -Condition (-not $pluginProjectText.Contains('"tests/')) -Message "Plugin project maps test-place sources"
 Assert-Stage4 -Condition (-not $productionProjectText.Contains("OfficeSecurityProbe")) -Message "Security probe leaked into production project"
-foreach ($testOnlyName in @("TestSupport", "Stage2Tests", "ForeignOwnershipProbe", "OfficeSecurityProbe", "Stage4Acceptance")) {
+foreach ($testOnlyName in @("TestSupport", "Stage2Tests", "ForeignOwnershipProbe", "OfficeSecurityProbe", "Stage4Acceptance", "Stage5Acceptance")) {
 	Assert-Stage4 -Condition (-not $productionProjectText.Contains($testOnlyName)) -Message "Test-only mapping leaked into production project: $testOnlyName"
 }
 

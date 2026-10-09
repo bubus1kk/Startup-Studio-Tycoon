@@ -65,9 +65,11 @@
 
 **Цель:** найм, назначение, движение и работа сотрудников.
 
-**Задачи:** candidates; data model; roles; hiring; desk assignment; pathfinding; stuck recovery; state machine; payroll; morale; productivity; controlled spawning.
+**Задачи:** 9 roles; 4 grades; 3 stats; 12 traits; Candidate Board 3/TTL 300/refresh 120; authoritative hiring; deterministic workstation IDs and L1/L2/L3 capacities; pathfinding and bounded stuck recovery; atomic 60-second payroll; morale; XP/levels; role work ledger; controlled spawning up to 30 NPC; minimal Employees UI; bounded same-server snapshot.
 
-**Gate:** все роли работают; payroll server-side; нет двойных desk; path failure не ломает цикл; cleanup при выходе.
+**Gate:** все роли работают; сервер не принимает цену/статы/время/ownership от клиента; payroll не бывает частичным и не уводит Cash ниже нуля; нет двойных desk; upgrade/rebuild восстанавливает stable assignments, а удалённый desk освобождает сотрудника; blocked path восстанавливается либо остаётся в безопасном `Stuck`; cleanup при выходе удаляет NPC/attachments/connections; Solo, MP3, NPC10, NPC30, Blocked Path и Full acceptance подтверждены.
+
+**Ограничение этапа:** role work points не создают продукт, release, revenue или offline income. DataStore/ProfileService остаются Stage 9; snapshot Stage 5 живёт только в текущем server process.
 
 **Сложность:** очень высокая.
 

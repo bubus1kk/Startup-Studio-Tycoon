@@ -38,6 +38,7 @@ local EDIT_MODE_TIMEOUT_SECONDS = 30
 local EDIT_MODE_STABILIZATION_SECONDS = 0.5
 local EDIT_MODE_POLL_SECONDS = 0.05
 local FULL_TIMEOUT_SECONDS = 480
+local STAGE5_FULL_SAFETY_MARGIN_SECONDS = 300
 
 local DEFINITIONS: { [string]: Definition } = {
 	Runtime = {
@@ -68,7 +69,83 @@ local DEFINITIONS: { [string]: Definition } = {
 		args = { stage = 4, suite = "Stage4Performance6", watchdogSeconds = 240 },
 		timeoutSeconds = 240,
 	},
+	Stage5Runtime = {
+		displayName = "Stage 5 Runtime",
+		expectedSuite = "Stage5Runtime",
+		players = nil,
+		args = "Stage5RuntimeGate",
+		timeoutSeconds = 120,
+	},
+	Stage5Solo = {
+		displayName = "Stage 5 Solo",
+		expectedSuite = "Stage5Solo",
+		players = nil,
+		args = { stage = 5, suite = "Stage5Solo", watchdogSeconds = 180 },
+		timeoutSeconds = 180,
+	},
+	Stage5Multiplayer3 = {
+		displayName = "Stage 5 Multiplayer 3",
+		expectedSuite = "Stage5Multiplayer3",
+		players = 3,
+		args = { stage = 5, suite = "Stage5Multiplayer3", watchdogSeconds = 240 },
+		timeoutSeconds = 240,
+	},
+	Stage5Npc10 = {
+		displayName = "Stage 5 NPC 10",
+		expectedSuite = "Stage5Npc10",
+		players = nil,
+		args = { stage = 5, suite = "Stage5Npc10", employeeCount = 10, watchdogSeconds = 300 },
+		timeoutSeconds = 300,
+	},
+	Stage5Npc30 = {
+		displayName = "Stage 5 NPC 30",
+		expectedSuite = "Stage5Npc30",
+		players = nil,
+		args = { stage = 5, suite = "Stage5Npc30", employeeCount = 30, watchdogSeconds = 480 },
+		timeoutSeconds = 480,
+	},
+	Stage5BlockedPath = {
+		displayName = "Stage 5 Blocked Path",
+		expectedSuite = "Stage5BlockedPath",
+		players = nil,
+		args = { stage = 5, suite = "Stage5BlockedPath", watchdogSeconds = 180 },
+		timeoutSeconds = 180,
+	},
 }
+
+local STAGE5_FULL_SEQUENCE = {
+	"Runtime",
+	"Solo",
+	"Multiplayer3",
+	"Performance6",
+	"Stage5Runtime",
+	"Stage5Solo",
+	"Stage5Multiplayer3",
+	"Stage5Npc10",
+	"Stage5Npc30",
+	"Stage5BlockedPath",
+}
+
+local function sumSuiteTimeouts(sequence: { string }): number
+	local total = 0
+	for _, name in sequence do
+		total += assert(DEFINITIONS[name], `Missing suite definition {name}`).timeoutSeconds
+	end
+	return total
+end
+
+local STAGE5_FULL_SUITE_TIMEOUT_SECONDS = sumSuiteTimeouts(STAGE5_FULL_SEQUENCE)
+local STAGE5_FULL_EDIT_MODE_BARRIER_BUDGET_SECONDS = #STAGE5_FULL_SEQUENCE * 2 * EDIT_MODE_TIMEOUT_SECONDS
+local STAGE5_FULL_TIMEOUT_SECONDS = STAGE5_FULL_SUITE_TIMEOUT_SECONDS
+	+ STAGE5_FULL_EDIT_MODE_BARRIER_BUDGET_SECONDS
+	+ STAGE5_FULL_SAFETY_MARGIN_SECONDS
+
+local function setStage5FullMetrics(result: Result)
+	result.metrics.fullSuiteTimeoutSeconds = STAGE5_FULL_SUITE_TIMEOUT_SECONDS
+	result.metrics.fullEditModeBarrierBudgetSeconds = STAGE5_FULL_EDIT_MODE_BARRIER_BUDGET_SECONDS
+	result.metrics.fullSafetyMarginSeconds = STAGE5_FULL_SAFETY_MARGIN_SECONDS
+	result.metrics.fullTimeoutSeconds = STAGE5_FULL_TIMEOUT_SECONDS
+end
 
 local DEFAULT_EXECUTOR: Executor = {
 	Clock = function(_self: Executor): number
@@ -149,7 +226,12 @@ function AcceptanceRunner.new(executor: Executor?): Runner
 	}, AcceptanceRunner)
 end
 
-function AcceptanceRunner._runDefinition(self: Runner, definition: Definition, fullStarted: number?): (Result, boolean)
+function AcceptanceRunner._runDefinition(
+	self: Runner,
+	definition: Definition,
+	fullStarted: number?,
+	fullTimeoutSeconds: number?
+): (Result, boolean)
 	local executor = self._executor
 	local suiteStarted = executor:Clock()
 	local beforeContext = `{definition.expectedSuite} before Execute`
@@ -230,7 +312,7 @@ function AcceptanceRunner._runDefinition(self: Runner, definition: Definition, f
 	if not valid or result == nil then
 		local fullElapsed = if fullStarted ~= nil then executor:Clock() - fullStarted else elapsed
 		local watchdogExpired = elapsed >= definition.timeoutSeconds
-			or (fullStarted ~= nil and fullElapsed >= FULL_TIMEOUT_SECONDS)
+			or (fullStarted ~= nil and fullElapsed >= (fullTimeoutSeconds or FULL_TIMEOUT_SECONDS))
 		warn(`[StageAcceptancePlugin] NIL_OR_INVALID_RESULT suite={definition.expectedSuite}`)
 		warn(string.format("[StageAcceptancePlugin] elapsedSeconds=%.3f", elapsed))
 		warn(`[StageAcceptancePlugin] editModeActive={executor:IsEditModeActive()}`)
@@ -248,11 +330,23 @@ function AcceptanceRunner._runDefinition(self: Runner, definition: Definition, f
 		warn(AcceptanceTypes.Format(failure))
 		return failure, false
 	end
-	if definition.expectedSuite == "Stage4Runtime" and result.total < 57 then
+	if definition.expectedSuite == "Stage4Runtime" and result.total < 72 then
 		local failure = AcceptanceTypes.FailureResult(
 			definition.expectedSuite,
 			"runtime test count gate",
-			`Only {result.total} runtime tests executed; Stage 4 requires at least 57`,
+			`Only {result.total} runtime tests executed; Stage 4 requires at least 72`,
+			nil
+		)
+		failure.durationSeconds = elapsed
+		failure.metrics.runtimeTestsExecuted = result.total
+		warn(AcceptanceTypes.Format(failure))
+		return failure, true
+	end
+	if definition.expectedSuite == "Stage5Runtime" and result.total < 98 then
+		local failure = AcceptanceTypes.FailureResult(
+			definition.expectedSuite,
+			"runtime test count gate",
+			`Only {result.total} runtime tests executed; Stage 5 requires at least 98`,
 			nil
 		)
 		failure.durationSeconds = elapsed
@@ -285,7 +379,7 @@ function AcceptanceRunner.Run(self: Runner, runName: string): Result
 			end
 
 			local definition = assert(DEFINITIONS[name], `Missing suite definition {name}`)
-			local result, continueRun = self:_runDefinition(definition, fullStarted)
+			local result, continueRun = self:_runDefinition(definition, fullStarted, FULL_TIMEOUT_SECONDS)
 			table.insert(results, result)
 			if not continueRun then
 				break
@@ -297,12 +391,43 @@ function AcceptanceRunner.Run(self: Runner, runName: string): Result
 		aggregate.metrics.fullTimeoutSeconds = FULL_TIMEOUT_SECONDS
 		print(AcceptanceTypes.Format(aggregate))
 		return aggregate
+	elseif runName == "Stage5Full" then
+		local results: { Result } = {}
+		local fullStarted = self._executor:Clock()
+		for index, name in STAGE5_FULL_SEQUENCE do
+			local fullElapsed = self._executor:Clock() - fullStarted
+			if index > 1 and fullElapsed >= STAGE5_FULL_TIMEOUT_SECONDS then
+				local failure = failureResult(
+					"Stage5Full",
+					"Full orchestration timeout",
+					`Stage 5 Full exceeded {STAGE5_FULL_TIMEOUT_SECONDS}s before starting {name}`,
+					nil,
+					fullElapsed,
+					"fullWatchdogExpired"
+				)
+				setStage5FullMetrics(failure)
+				table.insert(results, failure)
+				break
+			end
+			local definition = assert(DEFINITIONS[name], `Missing suite definition {name}`)
+			local result, continueRun = self:_runDefinition(definition, fullStarted, STAGE5_FULL_TIMEOUT_SECONDS)
+			table.insert(results, result)
+			if not continueRun then
+				break
+			end
+		end
+		local aggregate = AcceptanceTypes.Aggregate("Stage5Full", results)
+		aggregate.durationSeconds = self._executor:Clock() - fullStarted
+		aggregate.metrics.fullElapsedSeconds = aggregate.durationSeconds
+		setStage5FullMetrics(aggregate)
+		print(AcceptanceTypes.Format(aggregate))
+		return aggregate
 	end
 	local definition = DEFINITIONS[runName]
 	if definition == nil then
 		return AcceptanceTypes.FailureResult("Stage4Plugin", "suite routing", `Unknown run {runName}`, nil)
 	end
-	local result = self:_runDefinition(definition, nil)
+	local result = self:_runDefinition(definition, nil, nil)
 	return result
 end
 

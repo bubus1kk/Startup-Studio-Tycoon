@@ -7,7 +7,11 @@ local testArgs = StudioTestService:GetTestArgs()
 
 -- The acceptance router owns structured Stage 4 suite runs. Preserve the
 -- legacy no-args runtime behavior and the explicit Stage4RuntimeGate string.
-if typeof(testArgs) == "table" and testArgs.stage == 4 and typeof(testArgs.suite) == "string" then
+if
+	typeof(testArgs) == "table"
+	and (testArgs.stage == 4 or testArgs.stage == 5)
+	and typeof(testArgs.suite) == "string"
+then
 	return
 end
 
@@ -21,25 +25,26 @@ local function endRuntimeGate(result: { [string]: unknown })
 end
 
 local runtimeWatchdog: thread? = nil
-if testArgs == "Stage4RuntimeGate" then
-	runtimeWatchdog = task.delay(90, function()
+if testArgs == "Stage4RuntimeGate" or testArgs == "Stage5RuntimeGate" then
+	local runtimeTimeoutSeconds = if testArgs == "Stage5RuntimeGate" then 120 else 90
+	runtimeWatchdog = task.delay(runtimeTimeoutSeconds, function()
 		endRuntimeGate({
 			ok = false,
-			suite = "Stage4Runtime",
+			suite = if testArgs == "Stage5RuntimeGate" then "Stage5Runtime" else "Stage4Runtime",
 			total = 1,
 			passed = 0,
 			failed = 1,
 			skipped = 0,
-			durationSeconds = 90,
+			durationSeconds = runtimeTimeoutSeconds,
 			failures = {
 				{
 					test = "runtime watchdog",
-					message = "Runtime suite exceeded the 90 second watchdog timeout",
+					message = `Runtime suite exceeded the {runtimeTimeoutSeconds} second watchdog timeout`,
 				},
 			},
 			metrics = {
 				watchdogExpired = true,
-				timeoutSeconds = 90,
+				timeoutSeconds = runtimeTimeoutSeconds,
 			},
 		})
 	end)
@@ -60,6 +65,14 @@ local OfficeSnapshotCacheSpec = require(script.Parent.Unit.OfficeSnapshotCacheSp
 local OfficeTemplateContentSpec = require(script.Parent.Unit.OfficeTemplateContentSpec)
 local RequestRateLimiterSpec = require(script.Parent.Unit.RequestRateLimiterSpec)
 local SessionCurrencyServiceSpec = require(script.Parent.Unit.SessionCurrencyServiceSpec)
+local CandidateGeneratorSpec = require(script.Parent.Unit.CandidateGeneratorSpec)
+local CandidateServiceSpec = require(script.Parent.Unit.CandidateServiceSpec)
+local EmployeeConfigSpec = require(script.Parent.Unit.EmployeeConfigSpec)
+local EmployeeRemoteDefinitionsSpec = require(script.Parent.Unit.EmployeeRemoteDefinitionsSpec)
+local EmployeePayrollSpec = require(script.Parent.Unit.EmployeePayrollSpec)
+local EmployeeProgressionProductivitySpec = require(script.Parent.Unit.EmployeeProgressionProductivitySpec)
+local EmployeeSnapshotSerializerSpec = require(script.Parent.Unit.EmployeeSnapshotSerializerSpec)
+local WorkstationDefinitionsSpec = require(script.Parent.Unit.WorkstationDefinitionsSpec)
 local AcceptanceRunnerSpec = require(script.Parent.Parent.Stage4Acceptance.PluginRunnerUnderTest.AcceptanceRunnerSpec)
 
 local PlotServiceIntegrationSpec = require(script.Parent.Integration.PlotServiceIntegrationSpec)
@@ -77,10 +90,14 @@ local OfficeRoomPurchaseSpec = require(script.Parent.Integration.OfficeRoomPurch
 local OfficeTierTransitionSpec = require(script.Parent.Integration.OfficeTierTransitionSpec)
 local OfficeUpgradeSpec = require(script.Parent.Integration.OfficeUpgradeSpec)
 local ProductionOfficeRuntimeSpec = require(script.Parent.Integration.ProductionOfficeRuntimeSpec)
+local EmployeeHireIntegrationSpec = require(script.Parent.Integration.EmployeeHireIntegrationSpec)
+local EmployeeNpcCapacitySpec = require(script.Parent.Integration.EmployeeNpcCapacitySpec)
+local EmployeeSnapshotRejoinSpec = require(script.Parent.Integration.EmployeeSnapshotRejoinSpec)
 
 local testCases: { TestHarness.TestCase } = {}
+local includeStage5 = testArgs ~= "Stage4RuntimeGate"
 
-for _, testCase in AcceptanceRunnerSpec.tests() do
+for _, testCase in AcceptanceRunnerSpec.tests(includeStage5) do
 	table.insert(testCases, testCase)
 end
 
@@ -123,6 +140,25 @@ do
 	end
 end
 
+if includeStage5 then
+	for _, spec in
+		{
+			EmployeeConfigSpec,
+			CandidateGeneratorSpec,
+			CandidateServiceSpec,
+			EmployeeRemoteDefinitionsSpec,
+			EmployeeProgressionProductivitySpec,
+			EmployeeSnapshotSerializerSpec,
+			EmployeePayrollSpec,
+			WorkstationDefinitionsSpec,
+		}
+	do
+		for _, testCase in spec.tests() do
+			table.insert(testCases, testCase)
+		end
+	end
+end
+
 for _, testCase in PlotServiceIntegrationSpec.tests() do
 	table.insert(testCases, testCase)
 end
@@ -156,17 +192,25 @@ do
 	end
 end
 
+if includeStage5 then
+	for _, spec in { EmployeeHireIntegrationSpec, EmployeeSnapshotRejoinSpec, EmployeeNpcCapacitySpec } do
+		for _, testCase in spec.tests() do
+			table.insert(testCases, testCase)
+		end
+	end
+end
+
 local report: TestHarness.Report? = nil
 local ok, cause = xpcall(function()
 	report = TestHarness.runAndCollect(testCases)
 	if (report :: TestHarness.Report).failed > 0 then
-		error(`Stage 4 runtime tests failed ({(report :: TestHarness.Report).failed})`)
+		error(`Runtime tests failed ({(report :: TestHarness.Report).failed})`)
 	end
 end, function(errorValue: unknown): string
 	return debug.traceback(tostring(errorValue), 2)
 end)
 
-if testArgs == "Stage4RuntimeGate" then
+if testArgs == "Stage4RuntimeGate" or testArgs == "Stage5RuntimeGate" then
 	if runtimeWatchdog ~= nil then
 		pcall(task.cancel, runtimeWatchdog)
 	end
@@ -189,7 +233,7 @@ if testArgs == "Stage4RuntimeGate" then
 	end
 	endRuntimeGate({
 		ok = ok and finalReport.failed == 0,
-		suite = "Stage4Runtime",
+		suite = if testArgs == "Stage5RuntimeGate" then "Stage5Runtime" else "Stage4Runtime",
 		total = finalReport.total,
 		passed = finalReport.passed,
 		failed = finalReport.failed,

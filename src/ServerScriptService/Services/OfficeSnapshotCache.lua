@@ -3,10 +3,12 @@
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local OfficeTypes = require(ServerScriptService.Domain.OfficeTypes)
+local EmployeeTypes = require(ServerScriptService.Domain.EmployeeTypes)
 local SessionCurrencyService = require(ServerScriptService.Services.SessionCurrencyService)
 
 type CurrencySnapshot = SessionCurrencyService.CurrencySnapshot
 type OfficeLayoutState = OfficeTypes.OfficeLayoutState
+type EmployeeSessionSnapshot = EmployeeTypes.EmployeeSessionSnapshot
 
 export type SessionSnapshot = {
 	userId: number,
@@ -14,6 +16,7 @@ export type SessionSnapshot = {
 	expiresAt: number,
 	layout: OfficeLayoutState,
 	currency: CurrencySnapshot,
+	employee: EmployeeSessionSnapshot?,
 }
 
 export type Clock = () -> number
@@ -56,7 +59,8 @@ function OfficeSnapshotCache.Put(
 	self: Cache,
 	userId: number,
 	layout: OfficeLayoutState,
-	currency: CurrencySnapshot
+	currency: CurrencySnapshot,
+	employee: EmployeeSessionSnapshot?
 ): SessionSnapshot
 	self:EvictExpired()
 	local now = self._clock()
@@ -84,6 +88,7 @@ function OfficeSnapshotCache.Put(
 		expiresAt = now + self._ttlSeconds,
 		layout = layout,
 		currency = currency,
+		employee = employee,
 	}
 	self._byUserId[userId] = snapshot
 	return snapshot

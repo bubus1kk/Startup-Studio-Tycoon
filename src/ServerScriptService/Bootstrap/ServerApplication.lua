@@ -15,6 +15,7 @@ local RemoteDefinitions = require(ReplicatedStorage.Shared.Remotes.RemoteDefinit
 
 local PlotConfigValidator = require(ServerScriptService.Config.PlotConfigValidator)
 local OfficeConfigValidator = require(ServerScriptService.Config.OfficeConfigValidator)
+local EmployeeConfigValidator = require(ServerScriptService.Config.EmployeeConfigValidator)
 local SessionCurrencyConfigValidator = require(ServerScriptService.Config.SessionCurrencyConfigValidator)
 local ServerConfigValidator = require(ServerScriptService.Config.ServerConfigValidator)
 local OfficeCatalog = require(ServerScriptService.Domain.OfficeCatalog)
@@ -24,15 +25,19 @@ local RuntimeEnvironment = require(ServerScriptService.Infrastructure.RuntimeEnv
 local ServerRemoteRegistry = require(ServerScriptService.Infrastructure.ServerRemoteRegistry)
 local ServiceRegistry = require(ServerScriptService.Infrastructure.ServiceRegistry)
 local PlayerSessionService = require(ServerScriptService.Services.PlayerSessionService)
+local EmployeeMovementService = require(ServerScriptService.Services.EmployeeMovementService)
+local EmployeeService = require(ServerScriptService.Services.EmployeeService)
 local OfficeBuildingService = require(ServerScriptService.Services.OfficeBuildingService)
 local OfficeSnapshotCache = require(ServerScriptService.Services.OfficeSnapshotCache)
 local PlotService = require(ServerScriptService.Services.PlotService)
 local SessionCurrencyService = require(ServerScriptService.Services.SessionCurrencyService)
+local WorkstationService = require(ServerScriptService.Services.WorkstationService)
 local RequestRateLimiter = require(ServerScriptService.Security.RequestRateLimiter)
 local OfficeLayoutBuilder = require(ServerScriptService.Systems.OfficeLayoutBuilder)
 local PlotRuntimeBuilder = require(ServerScriptService.Systems.PlotRuntimeBuilder)
 
 local OfficeDefinitions = require(ServerStorage.Config.OfficeDefinitions)
+local EmployeeDefinitions = require(ServerStorage.Config.EmployeeDefinitions)
 local PlotDefinitions = require(ServerStorage.Config.PlotDefinitions)
 local SessionCurrencyConfig = require(ServerStorage.Config.SessionCurrencyConfig)
 local ServerConfig = require(ServerStorage.Config.ServerConfig)
@@ -118,6 +123,20 @@ function ServerApplication.new(): Result<Application>
 			currencyConfigResult.error.details
 		)
 	end
+	local employeeConfigResult = ConfigLoader.validateAndFreeze(
+		"EmployeeDefinitions",
+		EmployeeDefinitions,
+		function(value: unknown)
+			return EmployeeConfigValidator.validate(value, officeConfigResult.value)
+		end
+	)
+	if not employeeConfigResult.ok then
+		return AppTypes.failure(
+			employeeConfigResult.error.code,
+			employeeConfigResult.error.message,
+			employeeConfigResult.error.details
+		)
+	end
 
 	local serverConfig = serverConfigResult.value
 	local environment = RuntimeEnvironment.detect(serverConfig.environment)
@@ -151,6 +170,19 @@ function ServerApplication.new(): Result<Application>
 	local limiter = RequestRateLimiter.new(os.clock)
 	local officeService =
 		OfficeBuildingService.new(officeConfigResult.value, progression, catalog, officeBuilder, limiter, logger)
+	local workstationService = WorkstationService.new(employeeConfigResult.value)
+	local movementService = EmployeeMovementService.new(employeeConfigResult.value, logger)
+	local employeeLimiter = RequestRateLimiter.new(os.clock)
+	local employeeRandom = Random.new()
+	local employeeService = EmployeeService.new(
+		employeeConfigResult.value,
+		employeeLimiter,
+		logger,
+		os.clock,
+		function(minimum: number, maximum: number): number
+			return employeeRandom:NextInteger(minimum, maximum)
+		end
+	)
 	local snapshotCache =
 		OfficeSnapshotCache.new(os.clock, currencyConfig.snapshotTtlSeconds, currencyConfig.snapshotCapacity)
 	local playerSessionService = PlayerSessionService.new(Players, logger, environment ~= "Production", snapshotCache)
@@ -253,9 +285,92 @@ function ServerApplication.new(): Result<Application>
 		)
 	end
 
+	local workstationRegistrationResult = registry:Register({
+		name = "WorkstationService",
+		dependencies = { "OfficeBuildingService" },
+		value = workstationService,
+		hooks = {
+			Init = function(dependencies)
+				workstationService:Init(dependencies)
+			end,
+			Start = function()
+				workstationService:Start()
+			end,
+			Destroy = function()
+				workstationService:Destroy()
+			end,
+		},
+	})
+	if not workstationRegistrationResult.ok then
+		return AppTypes.failure(
+			workstationRegistrationResult.error.code,
+			workstationRegistrationResult.error.message,
+			workstationRegistrationResult.error.details
+		)
+	end
+
+	local movementRegistrationResult = registry:Register({
+		name = "EmployeeMovementService",
+		dependencies = { "PlotService", "OfficeBuildingService" },
+		value = movementService,
+		hooks = {
+			Init = function(dependencies)
+				movementService:Init(dependencies)
+			end,
+			Start = function()
+				movementService:Start()
+			end,
+			Destroy = function()
+				movementService:Destroy()
+			end,
+		},
+	})
+	if not movementRegistrationResult.ok then
+		return AppTypes.failure(
+			movementRegistrationResult.error.code,
+			movementRegistrationResult.error.message,
+			movementRegistrationResult.error.details
+		)
+	end
+
+	local employeeRegistrationResult = registry:Register({
+		name = "EmployeeService",
+		dependencies = {
+			"SessionCurrencyService",
+			"WorkstationService",
+			"EmployeeMovementService",
+			"ServerRemoteRegistry",
+		},
+		value = employeeService,
+		hooks = {
+			Init = function(dependencies)
+				employeeService:Init(dependencies)
+			end,
+			Start = function()
+				employeeService:Start()
+			end,
+			Destroy = function()
+				employeeService:Destroy()
+			end,
+		},
+	})
+	if not employeeRegistrationResult.ok then
+		return AppTypes.failure(
+			employeeRegistrationResult.error.code,
+			employeeRegistrationResult.error.message,
+			employeeRegistrationResult.error.details
+		)
+	end
+
 	local playerSessionRegistrationResult = registry:Register({
 		name = "PlayerSessionService",
-		dependencies = { "PlotService", "SessionCurrencyService", "OfficeBuildingService" },
+		dependencies = {
+			"PlotService",
+			"SessionCurrencyService",
+			"OfficeBuildingService",
+			"WorkstationService",
+			"EmployeeService",
+		},
 		value = playerSessionService,
 		hooks = {
 			Init = function(dependencies)

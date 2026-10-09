@@ -127,7 +127,9 @@ Assert-Stage3 -Condition ($plotService.Contains('ensureFolder(self._workspaceRoo
 Assert-Stage3 -Condition ($plotService.Contains('ensureFolder(mapFolder, "Plots")')) -Message "PlotService.Init must own canonical Plots creation"
 Assert-Stage3 -Condition ($serverApplication.Contains('name = "PlotService"')) -Message "PlotService is not registered through ServiceRegistry"
 Assert-Stage3 -Condition ($serverApplication.Contains('name = "PlayerSessionService"')) -Message "PlayerSessionService is not registered through ServiceRegistry"
-Assert-Stage3 -Condition ($serverApplication.Contains('"PlotService", "SessionCurrencyService", "OfficeBuildingService"')) -Message "PlayerSessionService lacks its explicit Stage 3/4 dependencies"
+foreach ($dependency in @('"PlotService"', '"SessionCurrencyService"', '"OfficeBuildingService"', '"WorkstationService"', '"EmployeeService"')) {
+	Assert-Stage3 -Condition ($serverApplication.Contains($dependency)) -Message "PlayerSessionService lacks explicit dependency $dependency"
+}
 Assert-Stage3 -Condition ($playerSessionService.Contains("Players.PlayerAdded") -or $playerSessionService.Contains("self._players.PlayerAdded")) -Message "PlayerAdded lifecycle binding is missing"
 Assert-Stage3 -Condition ($playerSessionService.Contains("Players.PlayerRemoving") -or $playerSessionService.Contains("self._players.PlayerRemoving")) -Message "PlayerRemoving lifecycle binding is missing"
 Assert-Stage3 -Condition ($playerSessionService.Contains("CharacterAdded:Connect")) -Message "CharacterAdded lifecycle binding is missing"

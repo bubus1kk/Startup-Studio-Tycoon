@@ -27,6 +27,8 @@ type OfficeCategoryId = OfficeTypes.OfficeCategoryId
 type OfficeConfig = OfficeTypes.OfficeConfig
 type OfficeItemState = OfficeTypes.OfficeItemState
 type OfficeLayoutState = OfficeTypes.OfficeLayoutState
+type OfficeRuntimeChangedContext = OfficeTypes.OfficeRuntimeChangedContext
+type OfficeRuntimeChangeReason = OfficeTypes.OfficeRuntimeChangeReason
 type OfficePurchaseRequest = OfficeRemoteTypes.OfficePurchaseRequest
 type OfficePurchaseResponse = OfficeRemoteTypes.OfficePurchaseResponse
 type OfficeRemoteErrorCode = OfficeRemoteTypes.OfficeRemoteErrorCode
@@ -47,6 +49,7 @@ type OfficeRuntime = {
 	plotId: string,
 	plotGenerationToken: number,
 	runtimeSessionId: string,
+	runtimeGeneration: number,
 	layout: OfficeLayoutState,
 	root: Model,
 	pendingItems: { [string]: boolean },
@@ -68,6 +71,8 @@ type ServiceData = {
 	_remoteRegistry: RemoteRegistry?,
 	_runtimes: { [number]: OfficeRuntime },
 	_nextSessionId: number,
+	_nextRuntimeListenerId: number,
+	_runtimeListeners: { [number]: (context: OfficeRuntimeChangedContext) -> () },
 	_isInitialized: boolean,
 	_isStarted: boolean,
 	_isDestroyed: boolean,
@@ -174,10 +179,69 @@ function OfficeBuildingService.new(
 		_remoteRegistry = nil,
 		_runtimes = {},
 		_nextSessionId = 0,
+		_nextRuntimeListenerId = 0,
+		_runtimeListeners = {},
 		_isInitialized = false,
 		_isStarted = false,
 		_isDestroyed = false,
 	}, OfficeBuildingService)
+end
+
+function OfficeBuildingService._runtimeContext(
+	_self: Service,
+	runtime: OfficeRuntime,
+	reason: OfficeRuntimeChangeReason
+): OfficeRuntimeChangedContext
+	return {
+		userId = runtime.userId,
+		plotId = runtime.plotId,
+		runtimeSessionId = runtime.runtimeSessionId,
+		runtimeGeneration = runtime.runtimeGeneration,
+		root = runtime.root,
+		layout = OfficeLayoutSerializer.Copy(runtime.layout),
+		reason = reason,
+	}
+end
+
+function OfficeBuildingService._publishRuntimeChanged(
+	self: Service,
+	runtime: OfficeRuntime,
+	reason: OfficeRuntimeChangeReason
+)
+	local context = self:_runtimeContext(runtime, reason)
+	for _, listener in self._runtimeListeners do
+		task.defer(function()
+			local ok, cause = pcall(listener, context)
+			if not ok then
+				self._logger:Error("office_runtime_listener_failed", {
+					userId = runtime.userId,
+					reason = reason,
+					cause = tostring(cause),
+				})
+			end
+		end)
+	end
+end
+
+function OfficeBuildingService.GetRuntimeContext(self: Service, userId: number): OfficeRuntimeChangedContext?
+	local runtime = self._runtimes[userId]
+	return if runtime ~= nil then self:_runtimeContext(runtime, "Rebuilt") else nil
+end
+
+function OfficeBuildingService.SubscribeRuntimeChanged(
+	self: Service,
+	callback: (context: OfficeRuntimeChangedContext) -> ()
+): () -> ()
+	self._nextRuntimeListenerId += 1
+	local listenerId = self._nextRuntimeListenerId
+	self._runtimeListeners[listenerId] = callback
+	local subscribed = true
+	return function()
+		if subscribed then
+			subscribed = false
+			self._runtimeListeners[listenerId] = nil
+		end
+	end
 end
 
 function OfficeBuildingService.Init(self: Service, dependencies: DependencyResolver)
@@ -251,6 +315,7 @@ function OfficeBuildingService.PrepareSession(
 		plotId = contextResult.value.definition.id,
 		plotGenerationToken = contextResult.value.generationToken,
 		runtimeSessionId = tostring(self._nextSessionId),
+		runtimeGeneration = 1,
 		layout = layout,
 		root = root,
 		pendingItems = {},
@@ -259,6 +324,7 @@ function OfficeBuildingService.PrepareSession(
 		recentOrder = {},
 		isAcceptingPurchases = true,
 	}
+	self:_publishRuntimeChanged(self._runtimes[userId], "Prepared")
 	return AppTypes.success(OfficeLayoutSerializer.Copy(layout))
 end
 
@@ -646,8 +712,10 @@ function OfficeBuildingService.Purchase(
 	end
 	runtime.layout = nextLayout
 	runtime.root = pendingRoot
+	runtime.runtimeGeneration += 1
 	runtime.activeRequestId = nil
 	runtime.pendingItems[request.itemId] = nil
+	self:_publishRuntimeChanged(runtime, "PurchaseCommitted")
 	local finalEvaluation = self._progression:Evaluate(runtime.layout, request.itemId, false)
 	local finalState: OfficeItemState = if finalEvaluation.ok then finalEvaluation.value.state else "Purchased"
 	local response: OfficePurchaseResponse = {
@@ -686,6 +754,7 @@ function OfficeBuildingService.CloseSession(self: Service, userId: number): Resu
 	if runtime == nil then
 		return AppTypes.success(false)
 	end
+	self:_publishRuntimeChanged(runtime, "Closing")
 	runtime.root:Destroy()
 	self._runtimes[userId] = nil
 	self._limiter:ClearPlayer(userId)
@@ -739,6 +808,7 @@ function OfficeBuildingService.Destroy(self: Service)
 	self._plotService = nil
 	self._currencyService = nil
 	self._remoteRegistry = nil
+	table.clear(self._runtimeListeners)
 	self._isStarted = false
 	self._isInitialized = false
 end

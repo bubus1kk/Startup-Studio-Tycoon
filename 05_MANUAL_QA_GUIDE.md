@@ -153,14 +153,25 @@ Screenshot, video, Output, Developer Console, profiler.
 
 ### Employees
 
-- каждая роль;
-- недостаточно денег;
-- занятый desk;
-- удалённый desk;
-- перекрытый маршрут;
-- новый office tier;
-- увольнение;
-- выход во время движения.
+- собрать `StartupStudioTycoonStage5Tests.rbxl` и локальный runner по `docs/STAGE_5_AUTOMATED_ACCEPTANCE.md`; вручную установить plugin и сохранить structured result каждого suite;
+- выполнить `Stage 5 Runtime`: минимум 98 реально выполненных server tests (72 Stage 4 baseline + 26 Stage 5 additions), failed = 0; десять client scenarios также должны завершиться без Output errors;
+- **Solo:** открыть Employees кнопкой и `E`, проверить ровно один persistent GUI, tabs Candidates/Team, три candidate cards, TTL/cooldown countdown и roster pagination;
+- нанять по сотруднику каждой из 9 ролей; сервер сам выбирает стоимость, зарплату, grade, stats и trait, а UI отображает authoritative response;
+- проверить insufficient Cash, tier cap, occupied/incompatible/deleted/foreign desk, duplicate requestId и повтор hire одного candidateId: Cash/roster/reservations не дублируются;
+- дождаться candidate expiry, затем manual refresh; старый ID отклоняется, cooldown не обходится client timestamp;
+- upgrade equipment L1 → L2 → L3 и tier rebuild: stable desk assignments сохраняются, новые префиксные slots появляются, orphan attachments отсутствуют;
+- удалить active equipment/desk в тестовом сценарии: сотрудник становится Unassigned, stale reservation исчезает, visual recovery не мутирует экономику;
+- проверить payroll с ровно достаточным и недостаточным Cash: один atomic debit; `Active → Unpaid → Inactive`, затем recovery в `Active`; Cash не отрицателен и partial payroll отсутствует;
+- проверить XP/level/morale: work points и progression растут только на сервере, morale bands видны в output rate, Recreation Lounge и active HR дают bounded recovery без passive decay;
+- **NPC 10 / NPC 30:** ровно один model на сотрудника, один Humanoid и один Animator, ни одного BaseScript внутри NPC; визуально проверить idle, walk без скольжения, workstation work и повторный запуск после office rebuild; при недоступном asset NPC должен перейти на procedural fallback с Output warning, не останавливая employee simulation; нет permanent loop на NPC, path requests не образуют burst;
+- **Blocked Path:** перекрыть route; сотрудник остаётся внутри своего plot, bounded retries заканчиваются безопасным reposition/Working либо `Stuck`, сервер продолжает работу;
+- **Start Server + 3 Players:** каждый видит replicated NPC/office, но hire/assign/dismiss меняет только roster отправителя; чужой employee/workstation ID отклоняется;
+- выйти во время движения и payroll, затем быстро зайти на тот же живой server: NPC/connections удалены, bounded same-server snapshot восстанавливает roster/assignment/deadlines без двойного debit;
+- Reset Character 5 раз: EmployeesGui, button, NPC и event connections не дублируются;
+- в Script Profiler/MicroProfiler записать NPC 10, NPC 30, MP3 и blocked-path worst case; memory не должна постоянно расти;
+- выполнить `Stage 5 Full`: `Stage 4 Runtime → Stage 4 Solo → Stage 4 Multiplayer 3 → Stage 4 Performance 6 → Stage 5 Runtime → Stage 5 Solo → Stage 5 Multiplayer 3 → Stage 5 NPC 10 → Stage 5 NPC 30 → Stage 5 Blocked Path`; текущий динамический timeout `2130 suite + 600 Edit Mode barriers + 300 safety = 3030 секунд`.
+
+Для Stage 5 `rejoin` — только bounded snapshot внутри того же server process. Это не DataStore/ProfileService и не cross-server persistence. Products, release, revenue, fatigue и offline productivity этим этапом не проверяются.
 
 ### Product
 

@@ -27,7 +27,7 @@ FakeExecutor.__index = FakeExecutor
 type Fake = typeof(setmetatable({} :: FakeData, FakeExecutor))
 
 local function passingResult(suite: string): Result
-	local total = if suite == "Stage4Runtime" then 57 else 1
+	local total = if suite == "Stage4Runtime" then 72 elseif suite == "Stage5Runtime" then 98 else 1
 	return {
 		ok = true,
 		suite = suite,
@@ -44,6 +44,8 @@ end
 local function suiteFromArgs(args: unknown): string
 	if args == "Stage4RuntimeGate" then
 		return "Stage4Runtime"
+	elseif args == "Stage5RuntimeGate" then
+		return "Stage5Runtime"
 	end
 	assert(typeof(args) == "table", "Expected table test args")
 	local suite = (args :: { [string]: unknown }).suite
@@ -135,6 +137,29 @@ local function fullOrderAndBarrierTest()
 			"Stage4Performance6 before Execute",
 			"Stage4Performance6 after Execute",
 		}, ",")
+	)
+end
+
+local function stage5FullOrderAndCountGateTest()
+	local fake = FakeExecutor.new()
+	local result = newRunner(fake):Run("Stage5Full")
+	TestHarness.assertTrue(result.ok)
+	TestHarness.assertEqual(
+		table.concat(fake.executions, ","),
+		"Stage4Runtime,Stage4Solo,Stage4Multiplayer3,Stage4Performance6,Stage5Runtime,Stage5Solo,Stage5Multiplayer3,Stage5Npc10,Stage5Npc30,Stage5BlockedPath"
+	)
+	TestHarness.assertEqual(#fake.barriers, 20)
+	TestHarness.assertEqual(result.total, 178)
+	TestHarness.assertEqual(result.metrics.fullSuiteTimeoutSeconds, 2130)
+	TestHarness.assertEqual(result.metrics.fullEditModeBarrierBudgetSeconds, 600)
+	TestHarness.assertEqual(result.metrics.fullSafetyMarginSeconds, 300)
+	TestHarness.assertEqual(result.metrics.fullTimeoutSeconds, 3030)
+	TestHarness.assertTrue(
+		(result.metrics.fullTimeoutSeconds :: number)
+			> (
+				(result.metrics.fullSuiteTimeoutSeconds :: number)
+				+ result.metrics.fullEditModeBarrierBudgetSeconds :: number
+			)
 	)
 end
 
@@ -246,8 +271,8 @@ end
 
 local AcceptanceRunnerSpec = {}
 
-function AcceptanceRunnerSpec.tests(): { TestCase }
-	return {
+function AcceptanceRunnerSpec.tests(includeStage5: boolean?): { TestCase }
+	local tests = {
 		{ name = "acceptance plugin Full preserves suite order and Edit Mode barriers", run = fullOrderAndBarrierTest },
 		{
 			name = "acceptance plugin treats nil StudioTestService result as infrastructure FAIL",
@@ -275,6 +300,13 @@ function AcceptanceRunnerSpec.tests(): { TestCase }
 		{ name = "acceptance plugin buttons re-enable after exception", run = buttonsReenabledAfterExceptionTest },
 		{ name = "acceptance plugin buttons re-enable after timeout", run = buttonsReenabledAfterTimeoutTest },
 	}
+	if includeStage5 ~= false then
+		table.insert(tests, 2, {
+			name = "acceptance plugin Stage 5 Full preserves authoritative ten-suite order and runtime count gate",
+			run = stage5FullOrderAndCountGateTest,
+		})
+	end
+	return tests
 end
 
 return table.freeze(AcceptanceRunnerSpec)

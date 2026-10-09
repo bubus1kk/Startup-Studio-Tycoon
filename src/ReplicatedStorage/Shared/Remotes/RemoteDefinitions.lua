@@ -92,6 +92,92 @@ local purchaseResponseValidator = PayloadValidator.compile(PayloadValidator.reco
 	error = { rule = remoteErrorRule, optional = true },
 }, { maxItems = 9 }))
 
+local employeeIdRule = PayloadValidator.string({ minLength = 1, maxLength = 72, pattern = "^[A-Za-z0-9_:-]+$" })
+local employeeEnumRule = PayloadValidator.string({ minLength = 3, maxLength = 32, pattern = "^[A-Za-z]+$" })
+local employeeOverviewRequestValidator = PayloadValidator.compile(PayloadValidator.record({
+	rosterPage = { rule = PayloadValidator.number({ min = 1, max = 100, integer = true }) },
+}, { maxItems = 1 }))
+local employeeHireRequestValidator = PayloadValidator.compile(PayloadValidator.record({
+	requestId = { rule = requestIdRule },
+	candidateId = { rule = employeeIdRule },
+}, { maxItems = 2 }))
+local employeeAssignmentRequestValidator = PayloadValidator.compile(PayloadValidator.record({
+	requestId = { rule = requestIdRule },
+	employeeId = { rule = employeeIdRule },
+	workstationId = { rule = employeeIdRule },
+}, { maxItems = 3 }))
+local employeeDismissRequestValidator = PayloadValidator.compile(PayloadValidator.record({
+	requestId = { rule = requestIdRule },
+	employeeId = { rule = employeeIdRule },
+}, { maxItems = 2 }))
+local candidateRefreshRequestValidator = PayloadValidator.compile(PayloadValidator.record({
+	requestId = { rule = requestIdRule },
+}, { maxItems = 1 }))
+
+local candidateViewRule = PayloadValidator.record({
+	candidateId = { rule = employeeIdRule },
+	displayName = { rule = PayloadValidator.string({ minLength = 1, maxLength = 48 }) },
+	roleId = { rule = employeeEnumRule },
+	grade = { rule = employeeEnumRule },
+	speed = { rule = PayloadValidator.number({ min = 0, max = 100, integer = true }) },
+	quality = { rule = PayloadValidator.number({ min = 0, max = 100, integer = true }) },
+	reliability = { rule = PayloadValidator.number({ min = 0, max = 100, integer = true }) },
+	traitId = { rule = employeeEnumRule },
+	hiringCost = { rule = PayloadValidator.number({ min = 0, max = 1000000000, integer = true }) },
+	salaryPerCycle = { rule = PayloadValidator.number({ min = 0, max = 1000000000, integer = true }) },
+	expiresInSeconds = { rule = PayloadValidator.number({ min = 0, max = 300 }) },
+}, { maxItems = 11 })
+local employeeViewRule = PayloadValidator.record({
+	employeeId = { rule = employeeIdRule },
+	displayName = { rule = PayloadValidator.string({ minLength = 1, maxLength = 48 }) },
+	roleId = { rule = employeeEnumRule },
+	grade = { rule = employeeEnumRule },
+	level = { rule = PayloadValidator.number({ min = 1, max = 20, integer = true }) },
+	xp = { rule = PayloadValidator.number({ min = 0, max = 1000000000 }) },
+	requiredXp = { rule = PayloadValidator.number({ min = 0, max = 1000000000 }) },
+	speed = { rule = PayloadValidator.number({ min = 0, max = 100, integer = true }) },
+	quality = { rule = PayloadValidator.number({ min = 0, max = 100, integer = true }) },
+	reliability = { rule = PayloadValidator.number({ min = 0, max = 100, integer = true }) },
+	traitId = { rule = employeeEnumRule },
+	salaryPerCycle = { rule = PayloadValidator.number({ min = 0, max = 1000000000, integer = true }) },
+	morale = { rule = PayloadValidator.number({ min = 0, max = 100 }) },
+	status = { rule = employeeEnumRule },
+	assignedWorkstationId = { rule = employeeIdRule, optional = true },
+}, { maxItems = 15 })
+local roleWorkRule = PayloadValidator.record({
+	roleId = { rule = employeeEnumRule },
+	workPoints = { rule = PayloadValidator.number({ min = 0, max = 1000000000000 }) },
+}, { maxItems = 2 })
+local employeeOverviewFields = {
+	candidates = { rule = PayloadValidator.array(candidateViewRule, { maxItems = 3 }) },
+	roster = { rule = PayloadValidator.array(employeeViewRule, { maxItems = 5 }) },
+	rosterPage = { rule = PayloadValidator.number({ min = 1, max = 100, integer = true }) },
+	rosterPageCount = { rule = PayloadValidator.number({ min = 0, max = 100, integer = true }) },
+	rosterTotal = { rule = PayloadValidator.number({ min = 0, max = 30, integer = true }) },
+	tierEmployeeCap = { rule = PayloadValidator.number({ min = 0, max = 30, integer = true }) },
+	workstationCapacity = { rule = PayloadValidator.number({ min = 0, max = 30, integer = true }) },
+	occupiedWorkstations = { rule = PayloadValidator.number({ min = 0, max = 30, integer = true }) },
+	payrollRemainingSeconds = { rule = PayloadValidator.number({ min = 0, max = 60 }) },
+	refreshRemainingSeconds = { rule = PayloadValidator.number({ min = 0, max = 120 }) },
+	roleWorkSummary = { rule = PayloadValidator.array(roleWorkRule, { maxItems = 9 }) },
+	cash = { rule = PayloadValidator.number({ min = 0, max = 1000000000, integer = true }) },
+}
+local overviewResponseFields = table.clone(employeeOverviewFields)
+overviewResponseFields.ok = { rule = PayloadValidator.boolean() }
+overviewResponseFields.error = { rule = remoteErrorRule, optional = true }
+local employeeOverviewResponseValidator =
+	PayloadValidator.compile(PayloadValidator.record(overviewResponseFields, { maxItems = 14 }), { maxNodes = 256 })
+local employeeOverviewRule = PayloadValidator.record(employeeOverviewFields, { maxItems = 12 })
+local mutationResponseValidator = PayloadValidator.compile(
+	PayloadValidator.record({
+		ok = { rule = PayloadValidator.boolean() },
+		requestId = { rule = requestIdRule },
+		overview = { rule = employeeOverviewRule, optional = true },
+		error = { rule = remoteErrorRule, optional = true },
+	}, { maxItems = 4 }),
+	{ maxNodes = 256 }
+)
+
 local definitions: { RemoteDefinition } = {
 	{
 		name = "RequestOfficeCatalog",
@@ -106,6 +192,41 @@ local definitions: { RemoteDefinition } = {
 		direction = "ClientToServer",
 		requestValidator = purchaseRequestValidator,
 		responseValidator = purchaseResponseValidator,
+	},
+	{
+		name = "RequestEmployeeOverview",
+		kind = "Function",
+		direction = "ClientToServer",
+		requestValidator = employeeOverviewRequestValidator,
+		responseValidator = employeeOverviewResponseValidator,
+	},
+	{
+		name = "RequestEmployeeHire",
+		kind = "Function",
+		direction = "ClientToServer",
+		requestValidator = employeeHireRequestValidator,
+		responseValidator = mutationResponseValidator,
+	},
+	{
+		name = "RequestEmployeeAssignment",
+		kind = "Function",
+		direction = "ClientToServer",
+		requestValidator = employeeAssignmentRequestValidator,
+		responseValidator = mutationResponseValidator,
+	},
+	{
+		name = "RequestEmployeeDismiss",
+		kind = "Function",
+		direction = "ClientToServer",
+		requestValidator = employeeDismissRequestValidator,
+		responseValidator = mutationResponseValidator,
+	},
+	{
+		name = "RequestCandidateRefresh",
+		kind = "Function",
+		direction = "ClientToServer",
+		requestValidator = candidateRefreshRequestValidator,
+		responseValidator = mutationResponseValidator,
 	},
 }
 

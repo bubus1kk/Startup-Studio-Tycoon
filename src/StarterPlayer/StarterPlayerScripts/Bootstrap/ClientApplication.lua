@@ -24,6 +24,7 @@ end
 local ControllerRegistry = require(playerScripts.Infrastructure.ControllerRegistry)
 local RemoteClient = require(playerScripts.Infrastructure.RemoteClient)
 local BuildMenuController = require(playerScripts.Controllers.BuildMenuController)
+local EmployeesController = require(playerScripts.Controllers.EmployeesController)
 
 type AppError = AppTypes.AppError
 type Result<T> = AppTypes.Result<T>
@@ -70,6 +71,7 @@ function ClientApplication.new(): Result<Application>
 	local remoteClient =
 		RemoteClient.new(ReplicatedStorage, RemoteDefinitions.folderName, RemoteDefinitions.definitions)
 	local buildMenuController = BuildMenuController.new(game:GetService("Players").LocalPlayer)
+	local employeesController = EmployeesController.new(game:GetService("Players").LocalPlayer)
 
 	local registrationResult = registry:Register({
 		name = "RemoteClient",
@@ -116,6 +118,30 @@ function ClientApplication.new(): Result<Application>
 			buildMenuRegistrationResult.error.code,
 			buildMenuRegistrationResult.error.message,
 			buildMenuRegistrationResult.error.details
+		)
+	end
+
+	local employeesRegistrationResult = registry:Register({
+		name = "EmployeesController",
+		dependencies = { "RemoteClient" },
+		value = employeesController,
+		hooks = {
+			Init = function(dependencies)
+				employeesController:Init(dependencies)
+			end,
+			Start = function()
+				employeesController:Start()
+			end,
+			Destroy = function()
+				employeesController:Destroy()
+			end,
+		},
+	})
+	if not employeesRegistrationResult.ok then
+		return AppTypes.failure(
+			employeesRegistrationResult.error.code,
+			employeesRegistrationResult.error.message,
+			employeesRegistrationResult.error.details
 		)
 	end
 

@@ -51,7 +51,7 @@ The toolbar is named **Startup Studio Tests**.
 
 | Button | Studio call | Timeout | Route |
 |---|---|---:|---|
-| Stage 4 Runtime | `ExecutePlayModeAsync("Stage4RuntimeGate")` | 90 s | existing `TestRunner.server.lua`; real collected Stage 1–4 specs, minimum 57 |
+| Stage 4 Runtime | `ExecutePlayModeAsync("Stage4RuntimeGate")` | 90 s | existing `TestRunner.server.lua`; 61 functional server cases + 11 plugin-orchestration cases = 72 structured server cases |
 | Stage 4 Solo | `ExecutePlayModeAsync(args)` | 120 s | player/session, full catalog, geometry, five respawns, controller/view tests |
 | Stage 4 Multiplayer 3 | `ExecuteMultiplayerTestAsync(3, args)` | 180 s | isolation, Global HQ/Small Loft/Garage, foreign mutation, leave and `AddPlayers(1)` |
 | Stage 4 Performance 6 | `ExecuteMultiplayerTestAsync(6, args)` | 240 s | six maximum offices, budgets, ten rebuilds and cleanup |

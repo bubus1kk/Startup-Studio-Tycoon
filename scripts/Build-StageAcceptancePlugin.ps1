@@ -16,4 +16,5 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Built local Studio plugin: $outputPath"
+Write-Host "Runner includes preserved Stage 4 suites and Stage 5 Runtime/Solo/MP3/NPC10/NPC30/Blocked Path/Full."
 Write-Host "The script did not install or copy the plugin. Install it manually in Roblox Studio after review."

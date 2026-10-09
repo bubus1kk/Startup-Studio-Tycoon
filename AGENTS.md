@@ -15,6 +15,10 @@ Before non-trivial work read:
 - `05_MANUAL_QA_GUIDE.md`
 - `07_CODEX_WORKFLOW.md`
 - `08_DEVELOPMENT_PROCESS.md`
+- `docs/STAGE_4_ARCHITECTURE.md`
+- `docs/STAGE_4_AUTOMATED_ACCEPTANCE.md`
+- `docs/STAGE_5_ARCHITECTURE.md`
+- `docs/STAGE_5_AUTOMATED_ACCEPTANCE.md`
 
 ## Architecture
 
@@ -67,8 +71,9 @@ pwsh -NoProfile -File scripts/Test-Stage1.ps1
 pwsh -NoProfile -File scripts/Test-Stage2.ps1
 pwsh -NoProfile -File scripts/Test-Stage3.ps1
 pwsh -NoProfile -File scripts/Test-Stage4.ps1
+pwsh -NoProfile -File scripts/Test-Stage5.ps1
 rojo build default.project.json -o build/StartupStudioTycoon.rbxl
-rojo build test.project.json -o build/StartupStudioTycoonStage4Tests.rbxl
+rojo build test.project.json -o build/StartupStudioTycoonStage5Tests.rbxl
 rojo build stage-acceptance-plugin.project.json -o build/StageAcceptancePlugin.rbxm
 git diff --check
 ```

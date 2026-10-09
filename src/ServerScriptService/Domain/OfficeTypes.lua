@@ -131,4 +131,15 @@ export type OfficeCatalogPage = {
 	items: { OfficeCatalogItem },
 }
 
+export type OfficeRuntimeChangeReason = "Prepared" | "PurchaseCommitted" | "Rebuilt" | "Closing"
+export type OfficeRuntimeChangedContext = {
+	userId: number,
+	plotId: string,
+	runtimeSessionId: string,
+	runtimeGeneration: number,
+	root: Model,
+	layout: OfficeLayoutState,
+	reason: OfficeRuntimeChangeReason,
+}
+
 return table.freeze({})

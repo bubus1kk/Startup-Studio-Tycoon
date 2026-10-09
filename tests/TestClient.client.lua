@@ -4,7 +4,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StudioTestService = game:GetService("StudioTestService")
 
 local testArgs = StudioTestService:GetTestArgs()
-if typeof(testArgs) == "table" and testArgs.stage == 4 and typeof(testArgs.suite) == "string" then
+if
+	typeof(testArgs) == "table"
+	and (testArgs.stage == 4 or testArgs.stage == 5)
+	and typeof(testArgs.suite) == "string"
+then
 	return
 end
 
@@ -76,6 +80,10 @@ if clientSpecs == nil or not clientSpecs:IsA("Folder") then
 end
 local buildMenuControllerClientSpec = require(clientSpecs.BuildMenuControllerClientSpec)
 buildMenuControllerClientSpec.run()
+if testArgs == "Stage5RuntimeGate" then
+	local employeesControllerClientSpec = require(clientSpecs.EmployeesControllerClientSpec)
+	employeesControllerClientSpec.run()
+end
 
 local folder = ReplicatedStorage:WaitForChild("TestRemotes", 10)
 if folder == nil or not folder:IsA("Folder") then
